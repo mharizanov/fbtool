@@ -1,0 +1,30 @@
+# Copy to config.yaml and fill in. config.yaml is gitignored — it holds your
+# API key and the (private) group list.
+
+# Facebook groups to monitor. slug is the part after facebook.com/groups/
+# (either the vanity name or the numeric id).
+groups:
+  - slug: "000000000000000"
+    name: "My Group"
+
+# How many days back the summary should cover.
+days_back: 60
+
+# Browser settings. headless: false is strongly recommended — Facebook is far
+# more likely to challenge headless browsers.
+headless: false
+max_scrolls: 300              # per group; each scroll loads roughly 3-5 more posts
+scroll_pause_ms: 2500
+
+# Summarization
+provider: openai              # "openai" or "anthropic"
+model: gpt-5.5
+reasoning_effort: medium      # none | low | medium | high | xhigh (reasoning models only)
+openai_api_key: "sk-..."      # or leave unset to use the OPENAI_API_KEY env var
+# For provider: anthropic, the key is read from the ANTHROPIC_API_KEY env var
+# and model should be e.g. claude-opus-4-8.
+
+# Paths (relative to the project directory)
+profile_dir: profile          # persistent Chromium profile (holds your FB login)
+db_path: fbtool.db
+output_dir: summaries

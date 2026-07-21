@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.fbtool</string>
+
+    <!-- Replace /path/to/fbtool with the absolute path of your checkout. -->
+    <key>ProgramArguments</key>
+    <array>
+        <string>/path/to/fbtool/venv/bin/python</string>
+        <string>-m</string>
+        <string>fbtool</string>
+        <string>run</string>
+    </array>
+
+    <key>WorkingDirectory</key>
+    <string>/path/to/fbtool</string>
+
+    <!-- API key lives in config.yaml (provider: openai); no env vars needed. -->
+
+    <!-- Daily at 08:00 -->
+    <key>StartCalendarInterval</key>
+    <dict>
+        <key>Hour</key>
+        <integer>8</integer>
+        <key>Minute</key>
+        <integer>0</integer>
+    </dict>
+
+    <key>StandardOutPath</key>
+    <string>/path/to/fbtool/logs/fbtool.log</string>
+    <key>StandardErrorPath</key>
+    <string>/path/to/fbtool/logs/fbtool.err</string>
+</dict>
+</plist>

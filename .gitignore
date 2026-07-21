@@ -1,0 +1,9 @@
+venv/
+profile/
+logs/
+summaries/
+__pycache__/
+*.db
+config.yaml
+
+.DS_Store
