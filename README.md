@@ -118,6 +118,53 @@ Summaries land in `summaries/YYYY-MM-DD.md`.
 
 Individual steps: `fbtool scrape`, `fbtool summarize [--days N]`.
 
+## Using the scraped data for your own LLM analysis
+
+The database is the real product; the daily summary is just one consumer of
+it. Everything lands in a single `posts` table in `fbtool.db`:
+
+- `id` — Facebook post id (posts are upserted, so re-scrapes update a
+  post's text as comments accumulate)
+- `group_slug`, `author`, `permalink`
+- `text` — the post body, followed by up to 8 top comments under a
+  `[top comments]` marker
+- `posted_at` — exact ISO timestamp (null when it couldn't be paired)
+- `scraped_at` — when the row was last written
+
+Dump a window with plain SQL:
+
+```sh
+sqlite3 fbtool.db \
+  "select posted_at, author, text from posts
+   where posted_at > datetime('now', '-30 days') order by posted_at"
+```
+
+Or, from Python, get the same prompt-ready corpus the summarizer uses —
+one block per group, each post prefixed with its id, author, time, and
+permalink:
+
+```python
+from datetime import datetime, timedelta
+from fbtool.config import load
+from fbtool.summarize import build_corpus
+
+corpus, n_posts = build_corpus(load(), datetime.now() - timedelta(days=30))
+```
+
+Pair that corpus with your own instructions instead of the built-in
+summary prompt. Things that work well on group data like this:
+
+- **Q&A**: "what has been said about the garage door problem, with links?"
+- **Action items**: extract deadlines, votes, and announcements into a list.
+- **Trends over time**: run the same question over month-sized windows and
+  compare — recurring complaints, sentiment shifts, who answers questions.
+- **Structured extraction**: pull recommendations (services, phone numbers,
+  prices) into JSON for a searchable list.
+
+Posts average a few hundred tokens, so a quiet group's 60-day window fits
+in any model's context; for busy groups, chunk by week or month and
+aggregate the per-chunk results.
+
 ## Scheduling (launchd, macOS)
 
 ```sh
