@@ -1,9 +1,17 @@
 # fbtool — Facebook group monitor & summarizer
 
-Scrapes configured Facebook groups with a real (logged-in) browser, stores
-posts and their top comments in SQLite, and summarizes the last *n* days of
-discussion with an AI model (OpenAI by default; Anthropic, or a local model
-via Ollama/vLLM, optional).
+Turns Facebook groups you're a member of — including private ones — into a
+periodic LLM digest, entirely on your own machine. It scrapes with a real
+(logged-in) browser, stores posts and their top comments in SQLite, and
+summarizes the last *n* days of discussion (OpenAI by default; Anthropic,
+or a local model via Ollama/vLLM, optional).
+
+This fills a gap existing tools don't: scraping APIs stop at raw data and
+want your session cookies on their servers, keyword-alert services monitor
+with their own accounts so they can't get into members-only groups, and
+the classic DOM scrapers break whenever Facebook reshuffles its markup.
+fbtool captures the feed's GraphQL payloads instead, and your session
+never leaves your machine.
 
 Facebook has no API for groups, so collection is browser automation against
 a logged-in account. This is against Facebook's ToS — read
