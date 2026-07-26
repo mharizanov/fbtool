@@ -35,12 +35,26 @@ def build_corpus(cfg: Config, since: datetime) -> tuple[str, int]:
     return "\n\n".join(sections), total
 
 
+# Ollama and vLLM serve OpenAI-compatible APIs; they only differ in the
+# default endpoint and in not needing a real API key. `base_url` in config
+# overrides the endpoint for any of them.
+OPENAI_COMPAT = {
+    "openai": (None, None),  # None -> OPENAI_API_KEY env
+    "ollama": ("http://localhost:11434/v1", "ollama"),
+    "vllm": ("http://localhost:8000/v1", "EMPTY"),
+}
+
+
 def _summarize_openai(cfg: Config, prompt: str) -> str:
     from openai import OpenAI
 
-    client = OpenAI(api_key=cfg.openai_api_key or None)  # None -> OPENAI_API_KEY env
+    default_url, default_key = OPENAI_COMPAT[cfg.provider]
+    client = OpenAI(base_url=cfg.base_url or default_url,
+                    api_key=cfg.openai_api_key or default_key)
     kwargs = {}
-    if cfg.reasoning_effort and cfg.reasoning_effort != "none":
+    # Local servers generally reject unknown request fields, so only OpenAI
+    # itself gets the reasoning knob.
+    if cfg.provider == "openai" and cfg.reasoning_effort and cfg.reasoning_effort != "none":
         kwargs["reasoning_effort"] = cfg.reasoning_effort
     resp = client.chat.completions.create(
         model=cfg.model,
@@ -81,10 +95,13 @@ def summarize(cfg: Config, days: int | None = None) -> Path:
         f"Summarize the discussion.\n\n{corpus}"
     )
 
-    if cfg.provider == "openai":
+    if cfg.provider in OPENAI_COMPAT:
         text = _summarize_openai(cfg, prompt)
-    else:
+    elif cfg.provider == "anthropic":
         text = _summarize_anthropic(cfg, prompt)
+    else:
+        raise SystemExit(f"Unknown provider {cfg.provider!r} — "
+                         f"use one of: {', '.join([*OPENAI_COMPAT, 'anthropic'])}")
     if not text:
         raise SystemExit("Model returned an empty response")
 

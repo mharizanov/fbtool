@@ -2,7 +2,8 @@
 
 Scrapes configured Facebook groups with a real (logged-in) browser, stores
 posts and their top comments in SQLite, and summarizes the last *n* days of
-discussion with an AI model (OpenAI by default, Anthropic optional).
+discussion with an AI model (OpenAI by default; Anthropic, or a local model
+via Ollama/vLLM, optional).
 
 Facebook has no API for groups, so collection is browser automation against
 a logged-in account. This is against Facebook's ToS — read
@@ -91,6 +92,15 @@ venv/bin/playwright install chromium
    `provider: openai` — set `openai_api_key` there, or leave it unset and
    export `OPENAI_API_KEY`. For Claude, set `provider: anthropic`, a
    `model` like `claude-opus-4-8`, and export `ANTHROPIC_API_KEY`.
+
+   For a local model, no key is needed: set `provider: ollama` (default
+   endpoint `http://localhost:11434/v1`) or `provider: vllm`
+   (`http://localhost:8000/v1`), point `model` at a model you're serving,
+   and use `base_url` if the server runs elsewhere. Note the summarizer
+   sends all posts in one prompt — with a couple of active groups that can
+   be tens of thousands of tokens, so serve the model with a context window
+   to match (e.g. `OLLAMA_CONTEXT_LENGTH=32768`; Ollama's default is much
+   smaller and will silently truncate).
 
 3. Log in once (session persists in `profile/`):
 

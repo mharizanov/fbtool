@@ -23,6 +23,7 @@ class Config:
     model: str = "gpt-5.5"
     reasoning_effort: str = "medium"
     openai_api_key: str | None = None
+    base_url: str | None = None
     profile_dir: Path = field(default=PROJECT_DIR / "profile")
     db_path: Path = field(default=PROJECT_DIR / "fbtool.db")
     output_dir: Path = field(default=PROJECT_DIR / "summaries")
@@ -52,6 +53,7 @@ def load(path: Path | None = None) -> Config:
         model=raw.get("model", "gpt-5.5"),
         reasoning_effort=raw.get("reasoning_effort", "medium"),
         openai_api_key=raw.get("openai_api_key"),
+        base_url=raw.get("base_url"),
         profile_dir=as_path("profile_dir", PROJECT_DIR / "profile"),
         db_path=as_path("db_path", PROJECT_DIR / "fbtool.db"),
         output_dir=as_path("output_dir", PROJECT_DIR / "summaries"),

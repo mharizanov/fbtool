@@ -17,12 +17,18 @@ max_scrolls: 300              # per group; each scroll loads roughly 3-5 more po
 scroll_pause_ms: 2500
 
 # Summarization
-provider: openai              # "openai" or "anthropic"
+provider: openai              # "openai" | "anthropic" | "ollama" | "vllm"
 model: gpt-5.5
-reasoning_effort: medium      # none | low | medium | high | xhigh (reasoning models only)
+reasoning_effort: medium      # none | low | medium | high | xhigh (OpenAI reasoning models only)
 openai_api_key: "sk-..."      # or leave unset to use the OPENAI_API_KEY env var
 # For provider: anthropic, the key is read from the ANTHROPIC_API_KEY env var
 # and model should be e.g. claude-opus-4-8.
+#
+# Local models — ollama and vllm speak the OpenAI API and need no key:
+#   provider: ollama          # model: e.g. "llama3.3" (must be pulled already)
+#   provider: vllm            # model: the served model name, e.g. "meta-llama/Llama-3.3-70B-Instruct"
+# base_url: ""                # override the endpoint; defaults are
+#                             # ollama http://localhost:11434/v1, vllm http://localhost:8000/v1
 
 # Paths (relative to the project directory)
 profile_dir: profile          # persistent Chromium profile (holds your FB login)
