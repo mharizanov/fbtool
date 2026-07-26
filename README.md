@@ -184,19 +184,32 @@ Two working examples live in `examples/`, both built on `build_corpus()` /
   ids are remembered in a state file, and the exit code is 0 only on a
   match, so a cron/launchd line can chain a notification.
 
-## Scheduling (launchd, macOS)
+## Scheduling (optional)
+
+fbtool is a manual CLI — run `fbtool run` whenever you want a fresh digest.
+If you'd rather have it on a schedule, any scheduler that can run a command
+in the project directory works. Keep the cadence gentle — once a day is
+plenty (see [Account risk](#account-risk)).
+
+**cron:**
+
+```
+0 8 * * * cd /path/to/fbtool && venv/bin/python -m fbtool run >> logs/fbtool.log 2>&1
+```
+
+**launchd (macOS):** a template is in `launchd/com.fbtool.plist` — edit the
+schedule and replace `/path/to/fbtool` with your checkout's path, then:
 
 ```sh
 mkdir -p logs
-# edit launchd/com.fbtool.plist first: replace /path/to/fbtool with
-# the absolute path of this directory
 cp launchd/com.fbtool.plist ~/Library/LaunchAgents/
 launchctl load ~/Library/LaunchAgents/com.fbtool.plist
 ```
 
-Runs daily at 08:00. `headless: false` in config means a Chromium window
-briefly opens during the run — that's deliberate (headless browsers trip
-Facebook's bot detection much more often).
+Either way, with `headless: false` a Chromium window briefly opens during
+each run — that's deliberate (headless browsers trip Facebook's bot
+detection much more often), so schedule it on a machine with a display
+session.
 
 ## Maintenance notes
 
