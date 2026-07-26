@@ -45,7 +45,7 @@ OPENAI_COMPAT = {
 }
 
 
-def _summarize_openai(cfg: Config, prompt: str) -> str:
+def _complete_openai(cfg: Config, system: str, prompt: str) -> str:
     from openai import OpenAI
 
     default_url, default_key = OPENAI_COMPAT[cfg.provider]
@@ -59,7 +59,7 @@ def _summarize_openai(cfg: Config, prompt: str) -> str:
     resp = client.chat.completions.create(
         model=cfg.model,
         messages=[
-            {"role": "system", "content": SYSTEM},
+            {"role": "system", "content": system},
             {"role": "user", "content": prompt},
         ],
         **kwargs,
@@ -67,7 +67,7 @@ def _summarize_openai(cfg: Config, prompt: str) -> str:
     return resp.choices[0].message.content or ""
 
 
-def _summarize_anthropic(cfg: Config, prompt: str) -> str:
+def _complete_anthropic(cfg: Config, system: str, prompt: str) -> str:
     import anthropic
 
     client = anthropic.Anthropic()
@@ -75,11 +75,22 @@ def _summarize_anthropic(cfg: Config, prompt: str) -> str:
         model=cfg.model,
         max_tokens=16000,
         thinking={"type": "adaptive"},
-        system=SYSTEM,
+        system=system,
         messages=[{"role": "user", "content": prompt}],
     ) as stream:
         message = stream.get_final_message()
     return next((b.text for b in message.content if b.type == "text"), "")
+
+
+def complete(cfg: Config, system: str, prompt: str) -> str:
+    """One chat completion via the configured provider. The reusable entry
+    point for scripts building their own analysis on the scraped data."""
+    if cfg.provider in OPENAI_COMPAT:
+        return _complete_openai(cfg, system, prompt)
+    if cfg.provider == "anthropic":
+        return _complete_anthropic(cfg, system, prompt)
+    raise SystemExit(f"Unknown provider {cfg.provider!r} — "
+                     f"use one of: {', '.join([*OPENAI_COMPAT, 'anthropic'])}")
 
 
 def summarize(cfg: Config, days: int | None = None) -> Path:
@@ -95,13 +106,7 @@ def summarize(cfg: Config, days: int | None = None) -> Path:
         f"Summarize the discussion.\n\n{corpus}"
     )
 
-    if cfg.provider in OPENAI_COMPAT:
-        text = _summarize_openai(cfg, prompt)
-    elif cfg.provider == "anthropic":
-        text = _summarize_anthropic(cfg, prompt)
-    else:
-        raise SystemExit(f"Unknown provider {cfg.provider!r} — "
-                         f"use one of: {', '.join([*OPENAI_COMPAT, 'anthropic'])}")
+    text = complete(cfg, SYSTEM, prompt)
     if not text:
         raise SystemExit("Model returned an empty response")
 

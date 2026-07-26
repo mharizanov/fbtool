@@ -173,6 +173,17 @@ Posts average a few hundred tokens, so a quiet group's 60-day window fits
 in any model's context; for busy groups, chunk by week or month and
 aggregate the per-chunk results.
 
+Two working examples live in `examples/`, both built on `build_corpus()` /
+`complete()` from the backend:
+
+- **`ask.py`** — one-shot Q&A over the history:
+  `venv/bin/python examples/ask.py "who recommended a tailor?"`
+- **`wishlist_watch.py`** — daily buy/sell watch: put plain-language wishes
+  in `examples/wishlist.yaml` (copy the `.example`), run it after each
+  scrape, and it prints newly-listed matches with permalinks. Scanned post
+  ids are remembered in a state file, and the exit code is 0 only on a
+  match, so a cron/launchd line can chain a notification.
+
 ## Scheduling (launchd, macOS)
 
 ```sh
