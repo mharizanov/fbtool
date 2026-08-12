@@ -13,6 +13,10 @@ the classic DOM scrapers break whenever Facebook reshuffles its markup.
 fbtool captures the feed's GraphQL payloads instead, and your session
 never leaves your machine.
 
+The backstory — why the groups are worth reading but the feed isn't — is in
+the blog post: [Turning Facebook groups into a daily
+digest](https://harizanov.com/2026/08/turning-facebook-groups-into-a-daily-digest/).
+
 Facebook has no API for groups, so collection is browser automation against
 a logged-in account. This is against Facebook's ToS — read
 [Account risk](#account-risk) before pointing it at an account you care
