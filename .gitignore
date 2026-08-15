@@ -9,3 +9,4 @@ config.yaml
 .DS_Store
 wishlist_seen.json
 examples/wishlist.yaml
+selfIdentity.plist
