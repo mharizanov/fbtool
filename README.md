@@ -128,7 +128,27 @@ venv/bin/playwright install chromium
 
 Summaries land in `summaries/YYYY-MM-DD.md`.
 
-Individual steps: `fbtool scrape`, `fbtool summarize [--days N]`.
+Individual steps: `fbtool scrape`, `fbtool summarize [--days N]`,
+`fbtool delta`.
+
+## What's new since the last scrape
+
+Every scrape records a run, and `fbtool delta` reports what the latest one
+brought in: posts seen for the first time, plus older posts whose text grew
+(comments are folded into a post's text, so fresh comment activity on old
+threads shows up here too).
+
+```sh
+venv/bin/python -m fbtool delta                   # since the previous scrape
+venv/bin/python -m fbtool delta --group sailing   # one group, matched by name/slug
+venv/bin/python -m fbtool delta --runs 3          # across the last three scrapes
+venv/bin/python -m fbtool delta --since 2026-08-01T00:00:00
+venv/bin/python -m fbtool delta --ai              # model briefing instead of a listing
+```
+
+`--full` prints whole posts instead of snippets. The superseded text of an
+updated post is kept in `post_versions`, so the report shows just the newly
+added part (or a size delta when a post was edited rather than appended to).
 
 ## Using the scraped data for your own LLM analysis
 
@@ -141,7 +161,12 @@ it. Everything lands in a single `posts` table in `fbtool.db`:
 - `text` — the post body, followed by up to 8 top comments under a
   `[top comments]` marker
 - `posted_at` — exact ISO timestamp (null when it couldn't be paired)
-- `scraped_at` — when the row was last written
+- `scraped_at` — when the post was first seen
+- `updated_at` — when a re-scrape last grew the post's text (null: never)
+
+Two side tables support `fbtool delta`: `runs` (one row per scrape, the
+baselines deltas compare against) and `post_versions` (the superseded text
+of updated posts, so a delta can show exactly what was added).
 
 Dump a window with plain SQL:
 
@@ -222,3 +247,8 @@ session.
 - Timestamps come from exact `creation_time` values in the GraphQL payloads;
   posts whose timestamp can't be paired up are still kept (with a null
   `posted_at`).
+- Delta tracking lives in `fbtool/db.py` (`upsert_post` decides
+  new/updated/unchanged and archives superseded text) and `fbtool/delta.py`
+  (read-only reporting). The scrape itself stays a full-window crawl on
+  purpose — re-visiting known posts is what refreshes their comments; deltas
+  are computed at the write path, not by crawling less.
