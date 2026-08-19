@@ -16,6 +16,7 @@ from datetime import datetime, timedelta
 
 from playwright.sync_api import BrowserContext, Page, sync_playwright
 
+from . import db
 from .config import Config, Group
 
 POST_URL_RE = re.compile(r"/groups/[^/]+/(?:posts|permalink)/(\d+)")
@@ -25,6 +26,10 @@ POST_URL_RE = re.compile(r"/groups/[^/]+/(?:posts|permalink)/(\d+)")
 PAST_WINDOW_LIMIT = 2
 # Stop after this many consecutive scrolls that surface no new posts.
 STALE_SCROLL_LIMIT = 6
+# Stop after this many consecutive scroll batches whose posts are all
+# already stored in the database — independent of the timestamp cutoff,
+# and the fastest-triggering condition once the database is populated.
+KNOWN_STREAK_LIMIT = 3
 
 
 def _iter_json_docs(body: str):
@@ -195,7 +200,7 @@ def _merge(posts: dict, post: dict) -> bool:
 
 
 def scrape_group(page: Page, group: Group, cutoff: datetime, cfg: Config,
-                 graphql_responses: list) -> list[dict]:
+                 graphql_responses: list, known_ids: set[str] = frozenset()) -> list[dict]:
     graphql_responses.clear()
     url = f"https://www.facebook.com/groups/{group.slug}?sorting_setting=CHRONOLOGICAL"
     page.goto(url, wait_until="domcontentloaded", timeout=60_000)
@@ -213,8 +218,9 @@ def scrape_group(page: Page, group: Group, cutoff: datetime, cfg: Config,
     if dump_dir:
         Path(dump_dir).mkdir(parents=True, exist_ok=True)
 
-    def ingest(bodies: list[str]) -> list[datetime]:
+    def ingest(bodies: list[str]) -> tuple[list[datetime], set[str]]:
         new_times = []
+        touched_ids: set[str] = set()
         for body in bodies:
             stats["payloads"] += 1
             if dump_dir:
@@ -225,8 +231,10 @@ def scrape_group(page: Page, group: Group, cutoff: datetime, cfg: Config,
                 for root in roots:
                     stats["stories"] += 1
                     post = _story_to_post(root, group.slug)
-                    if post and _merge(posts, post) and post["posted_at"]:
-                        new_times.append(datetime.fromisoformat(post["posted_at"]))
+                    if post:
+                        touched_ids.add(post["id"])
+                        if _merge(posts, post) and post["posted_at"]:
+                            new_times.append(datetime.fromisoformat(post["posted_at"]))
                 # Timestamp backfill: pair post_ids with creation_times that
                 # live in sibling branches outside any single story root.
                 units: list = []
@@ -236,7 +244,7 @@ def scrape_group(page: Page, group: Group, cutoff: datetime, cfg: Config,
                     ct = _dig(unit, "creation_time", int)
                     if _valid_post_id(pid) and ct and pid in posts and not posts[pid]["posted_at"]:
                         posts[pid]["posted_at"] = datetime.fromtimestamp(ct).isoformat(timespec="seconds")
-        return new_times
+        return new_times, touched_ids
 
     def drain() -> list[str]:
         bodies = []
@@ -258,13 +266,25 @@ def scrape_group(page: Page, group: Group, cutoff: datetime, cfg: Config,
 
     past_batches = 0
     stale_scrolls = 0
+    known_streak = 0
     for i in range(cfg.max_scrolls):
         stats["scrolls"] = i + 1
         page.mouse.wheel(0, 6000)
         page.evaluate("window.scrollBy(0, 6000)")
         page.wait_for_timeout(cfg.scroll_pause_ms)
 
-        new_times = ingest(drain())
+        new_times, touched_ids = ingest(drain())
+
+        # Independent of the timestamp cutoff below: once we're back into
+        # territory the database already has, stop — this doesn't depend
+        # on Facebook's ordering or timestamp parsing being exact.
+        if touched_ids and touched_ids <= known_ids:
+            known_streak += 1
+            if known_streak >= KNOWN_STREAK_LIMIT:
+                break
+        else:
+            known_streak = 0
+
         if new_times:
             stale_scrolls = 0
             if min(new_times) < cutoff:
@@ -296,24 +316,71 @@ def open_context(pw, cfg: Config, headless: bool | None = None) -> BrowserContex
     )
 
 
-def login(cfg: Config) -> None:
-    """Open a headed browser so the user can log in manually; the session
-    persists in the profile directory for later scrape runs."""
+def _is_logged_in(ctx: BrowserContext) -> bool:
+    """Facebook sets the `c_user` cookie only for an authenticated session."""
+    return any(c.get("name") == "c_user" for c in ctx.cookies())
+
+
+def login(cfg: Config) -> bool:
+    """Open a headed browser so the user can log in manually. Polls for the
+    session cookie and closes itself the moment login succeeds — no manual
+    window close or scrolling needed. Returns whether login succeeded."""
     with sync_playwright() as pw:
         ctx = open_context(pw, cfg, headless=False)
         page = ctx.pages[0] if ctx.pages else ctx.new_page()
         page.goto("https://www.facebook.com/")
         print("Log in to Facebook in the opened browser window.")
-        print("When your feed loads, close the window (or press Ctrl-C here).")
+        print("It will close automatically once login is detected.")
+        success = False
         try:
-            page.wait_for_event("close", timeout=0)
+            while not _is_logged_in(ctx):
+                page.wait_for_timeout(1000)
+            success = True
         except KeyboardInterrupt:
             pass
+        except Exception:
+            pass  # window closed manually, or the page/context went away
+        try:
+            ctx.close()
+        except Exception:
+            pass
+    print("Login detected — session saved." if success
+          else "Login window closed without detecting a session.")
+    return success
+
+
+def ensure_logged_in(cfg: Config) -> None:
+    """Check the persisted profile for a valid session without showing a
+    browser window; only pop one open (via `login`) if a human needs to
+    authenticate."""
+    with sync_playwright() as pw:
+        ctx = open_context(pw, cfg, headless=True)
+        logged_in = _is_logged_in(ctx)
         ctx.close()
+    if logged_in:
+        return
+    print("No active Facebook session — opening a browser window to log in…")
+    if not login(cfg):
+        raise RuntimeError("Login did not complete — run `python -m fbtool login` first.")
 
 
 def scrape_all(cfg: Config) -> list[dict]:
-    cutoff = datetime.now() - timedelta(days=cfg.days_back)
+    ensure_logged_in(cfg)
+
+    days_cutoff = datetime.now() - timedelta(days=cfg.days_back)
+    cutoff = days_cutoff
+    known_ids_by_group: dict[str, set[str]] = {}
+    con = db.connect(cfg.db_path)
+    try:
+        last_run = db.run_boundary(con, 1)
+        if last_run:
+            incremental_cutoff = datetime.fromisoformat(last_run) - timedelta(hours=cfg.overlap_hours)
+            cutoff = max(days_cutoff, incremental_cutoff)
+        for group in cfg.groups:
+            known_ids_by_group[group.slug] = db.known_post_ids(con, group.slug)
+    finally:
+        con.close()
+
     scraped_at = datetime.now().isoformat(timespec="seconds")
     all_posts: list[dict] = []
     with sync_playwright() as pw:
@@ -326,7 +393,8 @@ def scrape_all(cfg: Config) -> list[dict]:
 
         for group in cfg.groups:
             print(f"Scraping {group.name} (facebook.com/groups/{group.slug}) …")
-            posts = scrape_group(page, group, cutoff, cfg, graphql_responses)
+            posts = scrape_group(page, group, cutoff, cfg, graphql_responses,
+                                 known_ids_by_group[group.slug])
             for post in posts:
                 post["scraped_at"] = scraped_at
             print(f"  {len(posts)} posts within the last {cfg.days_back} days")

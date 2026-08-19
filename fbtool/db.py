@@ -100,6 +100,13 @@ def new_posts_since(con: sqlite3.Connection, group_slug: str, since_iso: str) ->
     ).fetchall()
 
 
+def known_post_ids(con: sqlite3.Connection, group_slug: str) -> set[str]:
+    """All post IDs already stored for this group — lets a scrape stop
+    early once it re-encounters only already-known posts."""
+    rows = con.execute("SELECT id FROM posts WHERE group_slug = ?", (group_slug,)).fetchall()
+    return {r["id"] for r in rows}
+
+
 def updated_posts_since(con: sqlite3.Connection, group_slug: str, since_iso: str) -> list[sqlite3.Row]:
     """Posts that existed before `since_iso` but whose text grew after it."""
     return con.execute(

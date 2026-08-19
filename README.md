@@ -56,11 +56,14 @@ generated. So fbtool doesn't parse the DOM at all. Instead:
   what the structure looks like now.
 - **Session expiry or a checkpoint** — scraping reports "Not logged in".
   Rerun `python -m fbtool login` and complete whatever Facebook asks.
-- **Bot detection** — headless mode, a datacenter/VPN IP, or an IP in a new
-  country are the usual triggers. Keep `headless: false` and run from the
-  network you normally use Facebook on.
+- **Bot detection** — a datacenter/VPN IP, an IP in a new country, or an
+  unnaturally mechanical scroll/timing pattern are the usual triggers.
+  Run from the network you normally use Facebook on; the `--disable-blink-
+  features=AutomationControlled` launch flag and modern headless Chromium
+  already remove most of the client-side automation signals.
 - **Overlays** — cookie-consent or login-nag dialogs can block the feed
-  from loading. Run headed and watch what the page does.
+  from loading. Set `headless: false` in config.yaml temporarily and watch
+  what the page does.
 
 ## Account risk
 
@@ -81,8 +84,8 @@ Practical guidance:
 - The reasonable middle ground is a **legitimate secondary account that is
   a real member of the group**, so a worst-case ban doesn't take your
   primary account with it.
-- Keep the cadence low, keep `headless: false`, and don't suddenly run the
-  scrape from a VPS in another country with the same profile.
+- Keep the cadence low, and don't suddenly run the scrape from a VPS in
+  another country with the same profile.
 
 ## Setup
 
@@ -235,10 +238,11 @@ cp launchd/com.fbtool.plist ~/Library/LaunchAgents/
 launchctl load ~/Library/LaunchAgents/com.fbtool.plist
 ```
 
-Either way, with `headless: false` a Chromium window briefly opens during
-each run — that's deliberate (headless browsers trip Facebook's bot
-detection much more often), so schedule it on a machine with a display
-session.
+Scraping itself runs headless, so no display session is required. A
+Chromium window only opens automatically if the saved session has expired
+and a human needs to log in — it closes itself the moment login is
+detected. Run `python -m fbtool login` proactively before scheduling
+unattended runs so that window never needs to appear on its own.
 
 ## Maintenance notes
 

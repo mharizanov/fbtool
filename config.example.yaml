@@ -10,11 +10,21 @@ groups:
 # How many days back the summary should cover.
 days_back: 60
 
-# Browser settings. headless: false is strongly recommended — Facebook is far
-# more likely to challenge headless browsers.
-headless: false
+# Browser settings. Scraping runs headless by default; a browser window only
+# opens automatically when the saved session is missing/expired and a human
+# needs to log in (it closes itself the moment login is detected). Set to
+# false to always run headed, e.g. while debugging.
+headless: true
 max_scrolls: 300              # per group; each scroll loads roughly 3-5 more posts
 scroll_pause_ms: 2500
+
+# Safety margin (hours) subtracted from the last run's start time when
+# computing the incremental scrape cutoff, so late-arriving/backdated
+# posts near the previous boundary aren't missed. Ignored on the first
+# run (falls back to days_back). Scraping also stops early per-group once
+# it re-encounters only posts already stored in the database, regardless
+# of this cutoff.
+overlap_hours: 24
 
 # Summarization
 provider: openai              # "openai" | "anthropic" | "ollama" | "vllm"

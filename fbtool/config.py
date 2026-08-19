@@ -16,9 +16,10 @@ class Group:
 class Config:
     groups: list[Group]
     days_back: int = 7
-    headless: bool = False
+    headless: bool = True
     max_scrolls: int = 40
     scroll_pause_ms: int = 2500
+    overlap_hours: float = 24.0
     provider: str = "openai"
     model: str = "gpt-5.5"
     reasoning_effort: str = "medium"
@@ -46,9 +47,10 @@ def load(path: Path | None = None) -> Config:
     return Config(
         groups=groups,
         days_back=int(raw.get("days_back", 7)),
-        headless=bool(raw.get("headless", False)),
+        headless=bool(raw.get("headless", True)),
         max_scrolls=int(raw.get("max_scrolls", 40)),
         scroll_pause_ms=int(raw.get("scroll_pause_ms", 2500)),
+        overlap_hours=float(raw.get("overlap_hours", 24.0)),
         provider=raw.get("provider", "openai"),
         model=raw.get("model", "gpt-5.5"),
         reasoning_effort=raw.get("reasoning_effort", "medium"),
