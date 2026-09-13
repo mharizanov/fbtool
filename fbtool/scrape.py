@@ -1,4 +1,4 @@
-"""Scrape Facebook group feeds by capturing the GraphQL payloads the feed
+"""Scrape Facebook group and Page feeds by capturing the GraphQL payloads the feed
 itself loads, using a persistent logged-in browser profile.
 
 Facebook obfuscates rendered timestamps (character-shuffled spans) and lazily
@@ -19,7 +19,10 @@ from playwright.sync_api import BrowserContext, Page, sync_playwright
 from . import db
 from .config import Config, Group
 
-POST_URL_RE = re.compile(r"/groups/[^/]+/(?:posts|permalink)/(\d+)")
+# Group posts: /groups/<slug>/posts/<numeric id>; Page posts:
+# /<slug>/posts/<numeric id or pfbid…>.
+POST_URL_RE = re.compile(
+    r"facebook\.com/(?:groups/[^/?#]+/(?:posts|permalink)|[^/?#]+/posts)/[^/?#]+")
 
 # Consecutive ingest batches whose oldest new post is older than the cutoff
 # before we stop (the feed is creation-sorted, so 2 is already conservative).
@@ -139,7 +142,7 @@ def _extract_comments(root: dict) -> list[str]:
     return comments
 
 
-def _story_to_post(story: dict, group_slug: str) -> dict | None:
+def _story_to_post(story: dict, group: Group) -> dict | None:
     post_id = story.get("post_id")
     if not _valid_post_id(post_id):
         post_id = _dig(story, "post_id", str)
@@ -158,17 +161,23 @@ def _story_to_post(story: dict, group_slug: str) -> dict | None:
     if actors and isinstance(actors[0], dict):
         author = actors[0].get("name")
 
+    # Prefer a permalink under this feed's own path: a shared post carries
+    # the original's URL too, and _walk's order is not meaningful.
     url = None
+    own_prefix = f"facebook.com/{group.path}/"
     for d in _walk(story):
         for key in ("wwwURL", "url", "permalink_url", "permalink"):
             v = d.get(key)
             if isinstance(v, str) and POST_URL_RE.search(v):
-                url = v.split("?")[0]
-                break
-        if url:
+                v = v.split("?")[0]
+                if own_prefix in v:
+                    url = v
+                    break
+                url = url or v
+        if url and own_prefix in url:
             break
     if url is None:
-        url = f"https://www.facebook.com/groups/{group_slug}/posts/{post_id}/"
+        url = group.post_url(post_id)
 
     comments = _extract_comments(story)
     if comments:
@@ -182,7 +191,7 @@ def _story_to_post(story: dict, group_slug: str) -> dict | None:
         "text": text,
         "posted_at": datetime.fromtimestamp(ct).isoformat(timespec="seconds") if ct else None,
         "permalink": url,
-        "group_slug": group_slug,
+        "group_slug": group.slug,
     }
 
 
@@ -202,8 +211,7 @@ def _merge(posts: dict, post: dict) -> bool:
 def scrape_group(page: Page, group: Group, cutoff: datetime, cfg: Config,
                  graphql_responses: list, known_ids: set[str] = frozenset()) -> list[dict]:
     graphql_responses.clear()
-    url = f"https://www.facebook.com/groups/{group.slug}?sorting_setting=CHRONOLOGICAL"
-    page.goto(url, wait_until="domcontentloaded", timeout=60_000)
+    page.goto(group.feed_url, wait_until="domcontentloaded", timeout=60_000)
     page.wait_for_timeout(6000)
 
     if page.query_selector('form[action*="login"]'):
@@ -230,7 +238,7 @@ def scrape_group(page: Page, group: Group, cutoff: datetime, cfg: Config,
                 _collect_roots(doc, roots)
                 for root in roots:
                     stats["stories"] += 1
-                    post = _story_to_post(root, group.slug)
+                    post = _story_to_post(root, group)
                     if post:
                         touched_ids.add(post["id"])
                         if _merge(posts, post) and post["posted_at"]:
@@ -392,7 +400,7 @@ def scrape_all(cfg: Config) -> list[dict]:
                 lambda r: graphql_responses.append(r) if "/api/graphql" in r.url else None)
 
         for group in cfg.groups:
-            print(f"Scraping {group.name} (facebook.com/groups/{group.slug}) …")
+            print(f"Scraping {group.name} (facebook.com/{group.path}) …")
             posts = scrape_group(page, group, cutoff, cfg, graphql_responses,
                                  known_ids_by_group[group.slug])
             for post in posts:

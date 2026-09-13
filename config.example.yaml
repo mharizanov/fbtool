@@ -1,11 +1,15 @@
 # Copy to config.yaml and fill in. config.yaml is gitignored — it holds your
 # API key and the (private) group list.
 
-# Facebook groups to monitor. slug is the part after facebook.com/groups/
-# (either the vanity name or the numeric id).
+# Facebook groups and Pages to monitor. For a group, slug is the part after
+# facebook.com/groups/ (either the vanity name or the numeric id). For a
+# public Page, add `type: page` and use the part after facebook.com/.
 groups:
   - slug: "000000000000000"
     name: "My Group"
+  - slug: "SomePublicPage"
+    name: "Some Public Page"
+    type: page
 
 # How many days back the summary should cover.
 days_back: 60

@@ -97,7 +97,8 @@ venv/bin/playwright install chromium
 ```
 
 1. Copy the config and add your group slugs (the part after
-   `facebook.com/groups/`):
+   `facebook.com/groups/`). Public Pages work too: add the entry with
+   `type: page` and the slug after `facebook.com/`.
 
    ```sh
    cp config.example.yaml config.yaml
