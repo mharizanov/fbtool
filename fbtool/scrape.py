@@ -372,8 +372,14 @@ def ensure_logged_in(cfg: Config) -> None:
         raise RuntimeError("Login did not complete — run `python -m fbtool login` first.")
 
 
-def scrape_all(cfg: Config) -> list[dict]:
+def scrape_all(cfg: Config, groups: list[Group] | None = None,
+               since: datetime | None = None) -> list[dict]:
+    """Scrape `groups` (default: all configured) back to the usual
+    incremental cutoff, or — for a backfill — back to `since`. A backfill
+    ignores the already-known-posts early stop so it reaches past posts the
+    database already holds."""
     ensure_logged_in(cfg)
+    groups = cfg.groups if groups is None else groups
 
     days_cutoff = datetime.now() - timedelta(days=cfg.days_back)
     cutoff = days_cutoff
@@ -384,8 +390,11 @@ def scrape_all(cfg: Config) -> list[dict]:
         if last_run:
             incremental_cutoff = datetime.fromisoformat(last_run) - timedelta(hours=cfg.overlap_hours)
             cutoff = max(days_cutoff, incremental_cutoff)
-        for group in cfg.groups:
-            known_ids_by_group[group.slug] = db.known_post_ids(con, group.slug)
+        if since is not None:
+            cutoff = since
+        for group in groups:
+            known_ids_by_group[group.slug] = (
+                frozenset() if since is not None else db.known_post_ids(con, group.slug))
     finally:
         con.close()
 
@@ -399,13 +408,13 @@ def scrape_all(cfg: Config) -> list[dict]:
         page.on("response",
                 lambda r: graphql_responses.append(r) if "/api/graphql" in r.url else None)
 
-        for group in cfg.groups:
+        for group in groups:
             print(f"Scraping {group.name} (facebook.com/{group.path}) …")
             posts = scrape_group(page, group, cutoff, cfg, graphql_responses,
                                  known_ids_by_group[group.slug])
             for post in posts:
                 post["scraped_at"] = scraped_at
-            print(f"  {len(posts)} posts within the last {cfg.days_back} days")
+            print(f"  {len(posts)} posts since {cutoff:%Y-%m-%d}")
             all_posts.extend(posts)
         ctx.close()
     return all_posts
