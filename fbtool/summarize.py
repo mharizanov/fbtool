@@ -24,7 +24,7 @@ def build_corpus(cfg: Config, since: datetime) -> tuple[str, int]:
     for group in cfg.groups:
         rows = db.posts_since(con, group.slug, since_iso)
         total += len(rows)
-        lines = [f"## Group: {group.name} ({len(rows)} posts)"]
+        lines = [f"## {group.kind.capitalize()}: {group.name} ({len(rows)} posts)"]
         for r in rows:
             lines.append(
                 f"\n--- post {r['id']} | author: {r['author'] or 'unknown'} | "

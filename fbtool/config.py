@@ -8,8 +8,24 @@ PROJECT_DIR = Path(__file__).resolve().parent.parent
 
 @dataclass
 class Group:
+    """A monitored feed: a Facebook group (default) or a public Page."""
     slug: str
     name: str
+    kind: str = "group"  # "group" | "page"
+
+    @property
+    def path(self) -> str:
+        """Site-relative path, e.g. groups/<slug> or <slug> for a Page."""
+        return self.slug if self.kind == "page" else f"groups/{self.slug}"
+
+    @property
+    def feed_url(self) -> str:
+        if self.kind == "page":
+            return f"https://www.facebook.com/{self.slug}"
+        return f"https://www.facebook.com/groups/{self.slug}?sorting_setting=CHRONOLOGICAL"
+
+    def post_url(self, post_id: str) -> str:
+        return f"https://www.facebook.com/{self.path}/posts/{post_id}/"
 
 
 @dataclass
@@ -34,9 +50,13 @@ def load(path: Path | None = None) -> Config:
     path = path or PROJECT_DIR / "config.yaml"
     raw = yaml.safe_load(path.read_text())
 
-    groups = [Group(slug=str(g["slug"]), name=g.get("name", str(g["slug"])))
+    groups = [Group(slug=str(g["slug"]), name=g.get("name", str(g["slug"])),
+                    kind=str(g.get("type", "group")).lower())
               for g in raw.get("groups", [])]
     groups = [g for g in groups if g.slug and g.slug != "REPLACE_ME"]
+    for g in groups:
+        if g.kind not in ("group", "page"):
+            raise ValueError(f"{g.slug}: type must be 'group' or 'page', not {g.kind!r}")
 
     def as_path(key: str, default: Path) -> Path:
         if key not in raw:
