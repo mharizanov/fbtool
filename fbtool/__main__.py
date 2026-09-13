@@ -13,18 +13,27 @@ def cmd_login(cfg, args):
 
 def cmd_scrape(cfg, args):
     from . import scrape
+    from .delta import select_groups
     if not cfg.groups:
         sys.exit("No groups configured — edit config.yaml first.")
+    needle = getattr(args, "group", None)
+    since_arg = getattr(args, "since", None)
+    groups = select_groups(cfg, needle)
+    since = datetime.fromisoformat(since_arg) if since_arg else None
     # Captured before scraping so every post stored below has scraped_at >=
     # started — the boundary `fbtool delta` compares against.
     started = datetime.now().isoformat(timespec="seconds")
-    posts = scrape.scrape_all(cfg)
+    posts = scrape.scrape_all(cfg, groups=groups, since=since)
     con = db.connect(cfg.db_path)
     counts = {"new": 0, "updated": 0, "unchanged": 0}
     with con:
         for post in posts:
             counts[db.upsert_post(con, post)] += 1
-        db.record_run(con, started)
+        # A targeted backfill isn't a "run" in the delta sense: recording it
+        # would make the next incremental scrape skip what the other feeds
+        # posted meanwhile, and would pollute `delta` baselines.
+        if not needle and not since_arg:
+            db.record_run(con, started)
     con.close()
     print(f"Stored {len(posts)} posts in {cfg.db_path} "
           f"({counts['new']} new, {counts['updated']} updated, "
@@ -57,7 +66,12 @@ def main():
     sub = parser.add_subparsers(dest="command", required=True)
 
     sub.add_parser("login", help="open a browser to log in to Facebook (one-time)")
-    sub.add_parser("scrape", help="scrape configured groups into the database")
+    p_scrape = sub.add_parser("scrape", help="scrape configured groups into the database")
+    p_scrape.add_argument("--group",
+                          help="only groups whose slug or name contains this")
+    p_scrape.add_argument("--since",
+                          help="backfill: scrape back to this date (YYYY-MM-DD) instead "
+                               "of the incremental cutoff; not recorded as a run")
 
     p_sum = sub.add_parser("summarize", help="summarize stored posts with the configured AI model")
     p_sum.add_argument("--days", type=int, default=None,

@@ -135,6 +135,15 @@ Summaries land in `summaries/YYYY-MM-DD.md`.
 Individual steps: `fbtool scrape`, `fbtool summarize [--days N]`,
 `fbtool delta`.
 
+Scrapes are incremental: each run only goes back to the previous run (plus
+`overlap_hours`). To backfill one feed further — e.g. a group or Page you
+just added — give an explicit start date; such a run isn't recorded as a
+baseline for `delta`:
+
+```sh
+venv/bin/python -m fbtool scrape --group mare --since 2025-08-01
+```
+
 ## What's new since the last scrape
 
 Every scrape records a run, and `fbtool delta` reports what the latest one
