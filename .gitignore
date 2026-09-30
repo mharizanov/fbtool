@@ -10,3 +10,4 @@ config.yaml
 wishlist_seen.json
 examples/wishlist.yaml
 selfIdentity.plist
+digest.sh
