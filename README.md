@@ -135,6 +135,11 @@ Summaries land in `summaries/YYYY-MM-DD.md`.
 Individual steps: `fbtool scrape`, `fbtool summarize [--days N]`,
 `fbtool delta`.
 
+To see which groups the logged-in account belongs to, run `fbtool groups`.
+It reads facebook.com/groups/joins/ and marks the ones already in
+`config.yaml` with `*`. With `--yaml` it prints config entries for the
+groups that aren't monitored yet, ready to paste under `groups:`.
+
 Scrapes are incremental: each run only goes back to the previous run (plus
 `overlap_hours`). To backfill one feed further — e.g. a group or Page you
 just added — give an explicit start date; such a run isn't recorded as a
