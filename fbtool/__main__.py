@@ -49,6 +49,11 @@ def cmd_delta(cfg, args):
                      since=args.since, full=args.full)
 
 
+def cmd_groups(cfg, args):
+    from . import groups
+    groups.report(cfg, as_yaml=args.yaml)
+
+
 def cmd_summarize(cfg, args):
     from . import summarize
     out = summarize.summarize(cfg, days=args.days)
@@ -72,6 +77,11 @@ def main():
     p_scrape.add_argument("--since",
                           help="backfill: scrape back to this date (YYYY-MM-DD) instead "
                                "of the incremental cutoff; not recorded as a run")
+
+    p_groups = sub.add_parser("groups",
+                              help="list the groups the logged-in account is a member of")
+    p_groups.add_argument("--yaml", action="store_true",
+                          help="print config.yaml entries for groups not yet monitored")
 
     p_sum = sub.add_parser("summarize", help="summarize stored posts with the configured AI model")
     p_sum.add_argument("--days", type=int, default=None,
@@ -97,7 +107,7 @@ def main():
     args = parser.parse_args()
     cfg = load()
     {"login": cmd_login, "scrape": cmd_scrape, "summarize": cmd_summarize,
-     "run": cmd_run, "delta": cmd_delta}[args.command](cfg, args)
+     "run": cmd_run, "delta": cmd_delta, "groups": cmd_groups}[args.command](cfg, args)
 
 
 if __name__ == "__main__":
