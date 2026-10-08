@@ -28,6 +28,9 @@ class Group:
         return f"https://www.facebook.com/{self.path}/posts/{post_id}/"
 
 
+DEFAULT_SEARCH_BUDGET = {"page_loads": 60, "scrolls": 300, "queries": 20}
+
+
 @dataclass
 class Config:
     groups: list[Group]
@@ -44,6 +47,9 @@ class Config:
     profile_dir: Path = field(default=PROJECT_DIR / "profile")
     db_path: Path = field(default=PROJECT_DIR / "fbtool.db")
     output_dir: Path = field(default=PROJECT_DIR / "summaries")
+    runs_dir: Path = field(default=PROJECT_DIR / "runs")
+    # Daily cap on search load (search, --expand); feeds don't count.
+    search_budget: dict = field(default_factory=lambda: dict(DEFAULT_SEARCH_BUDGET))
 
 
 def load(path: Path | None = None) -> Config:
@@ -79,4 +85,8 @@ def load(path: Path | None = None) -> Config:
         profile_dir=as_path("profile_dir", PROJECT_DIR / "profile"),
         db_path=as_path("db_path", PROJECT_DIR / "fbtool.db"),
         output_dir=as_path("output_dir", PROJECT_DIR / "summaries"),
+        runs_dir=as_path("runs_dir", PROJECT_DIR / "runs"),
+        search_budget={**DEFAULT_SEARCH_BUDGET,
+                       **{k: int(v) for k, v in (raw.get("search_budget") or {}).items()
+                          if k in DEFAULT_SEARCH_BUDGET}},
     )

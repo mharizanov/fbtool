@@ -9,6 +9,7 @@ exact creation times, full post text, authors, permalinks, and top comments.
 
 import json
 import os
+import random
 import re
 from collections import deque
 from pathlib import Path
@@ -142,7 +143,45 @@ def _extract_comments(root: dict) -> list[str]:
     return comments
 
 
-def _story_to_post(story: dict, group: Group) -> dict | None:
+def _post_urls(story: dict) -> list[str]:
+    """Every post permalink inside a story, in _walk order, query stripped."""
+    urls = []
+    for d in _walk(story):
+        for key in ("wwwURL", "url", "permalink_url", "permalink"):
+            v = d.get(key)
+            if isinstance(v, str) and POST_URL_RE.search(v):
+                urls.append(v.split("?")[0])
+    return urls
+
+
+def _attachment(story: dict) -> str | None:
+    """Title and description of a link/media attachment: link posts often
+    carry no text of their own, so this is what they are about."""
+    for d in _walk(story):
+        atts = d.get("attachments")
+        if not isinstance(atts, list):
+            continue
+        parts = []
+        for a in _walk(atts):
+            for key in ("title_with_entities", "title", "description"):
+                v = a.get(key)
+                if isinstance(v, dict) and isinstance(v.get("text"), str) and v["text"].strip():
+                    if v["text"] not in parts:
+                        parts.append(v["text"].strip())
+        if parts:
+            return " — ".join(parts)[:300]
+    return None
+
+
+def _comment_count(story: dict) -> int | None:
+    cri = _dig(story, "comment_rendering_instance", dict)
+    n = ((cri or {}).get("comments") or {}).get("total_count")
+    return n if isinstance(n, int) else None
+
+
+def _story_fields(story: dict) -> dict | None:
+    """What a story rendering says about its post, independent of where it
+    was found. None when it carries no usable post id."""
     post_id = story.get("post_id")
     if not _valid_post_id(post_id):
         post_id = _dig(story, "post_id", str)
@@ -161,24 +200,6 @@ def _story_to_post(story: dict, group: Group) -> dict | None:
     if actors and isinstance(actors[0], dict):
         author = actors[0].get("name")
 
-    # Prefer a permalink under this feed's own path: a shared post carries
-    # the original's URL too, and _walk's order is not meaningful.
-    url = None
-    own_prefix = f"facebook.com/{group.path}/"
-    for d in _walk(story):
-        for key in ("wwwURL", "url", "permalink_url", "permalink"):
-            v = d.get(key)
-            if isinstance(v, str) and POST_URL_RE.search(v):
-                v = v.split("?")[0]
-                if own_prefix in v:
-                    url = v
-                    break
-                url = url or v
-        if url and own_prefix in url:
-            break
-    if url is None:
-        url = group.post_url(post_id)
-
     comments = _extract_comments(story)
     if comments:
         text = (text + "\n[top comments]\n" + "\n".join(comments)).strip()
@@ -190,9 +211,23 @@ def _story_to_post(story: dict, group: Group) -> dict | None:
         "author": author,
         "text": text,
         "posted_at": datetime.fromtimestamp(ct).isoformat(timespec="seconds") if ct else None,
-        "permalink": url,
-        "group_slug": group.slug,
+        "attachment": _attachment(story),
+        "comment_count": _comment_count(story),
     }
+
+
+def _story_to_post(story: dict, group: Group) -> dict | None:
+    post = _story_fields(story)
+    if post is None:
+        return None
+    # Prefer a permalink under this feed's own path: a shared post carries
+    # the original's URL too, and _walk's order is not meaningful.
+    urls = _post_urls(story)
+    own_prefix = f"facebook.com/{group.path}/"
+    url = next((u for u in urls if own_prefix in u), urls[0] if urls else None)
+    post["permalink"] = url or group.post_url(post["id"])
+    post["group_slug"] = group.slug
+    return post
 
 
 def _merge(posts: dict, post: dict) -> bool:
@@ -205,17 +240,40 @@ def _merge(posts: dict, post: dict) -> bool:
         old["text"] = post["text"]
     old["author"] = old["author"] or post["author"]
     old["posted_at"] = old["posted_at"] or post["posted_at"]
+    for key in ("attachment", "comment_count"):
+        if old.get(key) is None and post.get(key) is not None:
+            old[key] = post[key]
     return False
 
 
-def scrape_group(page: Page, group: Group, cutoff: datetime, cfg: Config,
-                 graphql_responses: list, known_ids: set[str] = frozenset()) -> list[dict]:
-    graphql_responses.clear()
-    page.goto(group.feed_url, wait_until="domcontentloaded", timeout=60_000)
-    page.wait_for_timeout(6000)
+class CheckpointError(RuntimeError):
+    """Facebook wants a human (login, checkpoint). Abort the whole run."""
 
-    if page.query_selector('form[action*="login"]'):
-        raise RuntimeError("Not logged in — run `python -m fbtool login` first.")
+
+def _check_session(page: Page, at_load: bool) -> None:
+    if "/checkpoint/" in (page.url or ""):
+        raise CheckpointError("Facebook checkpoint — stopping. Resolve it in the "
+                              "browser (`python -m fbtool login`) before running again.")
+    if at_load and page.query_selector('form[action*="login"]'):
+        raise CheckpointError("Not logged in — run `python -m fbtool login` first.")
+
+
+def _pause(cfg: Config) -> int:
+    """Scroll pause with ±30 % jitter: a fixed cadence is a bot signal."""
+    return int(cfg.scroll_pause_ms * random.uniform(0.7, 1.3))
+
+
+def _crawl(page: Page, url: str, cfg: Config, graphql_responses: list, extract,
+           on_batch, dump_label: str, max_scrolls: int, merge=None) -> tuple[dict, dict]:
+    """Load `url`, then scroll, turning every story rendering in the
+    captured payloads into a post via `extract(root)` and folding partial
+    renderings together with `merge` (default _merge). After each scroll,
+    `on_batch(new_times, touched_ids, new_ids, posts)` decides whether to stop."""
+    merge = merge or _merge
+    graphql_responses.clear()
+    page.goto(url, wait_until="domcontentloaded", timeout=60_000)
+    page.wait_for_timeout(6000)
+    _check_session(page, at_load=True)
 
     posts: dict[str, dict] = {}
     stats = {"payloads": 0, "stories": 0, "scrolls": 0}
@@ -226,23 +284,26 @@ def scrape_group(page: Page, group: Group, cutoff: datetime, cfg: Config,
     if dump_dir:
         Path(dump_dir).mkdir(parents=True, exist_ok=True)
 
-    def ingest(bodies: list[str]) -> tuple[list[datetime], set[str]]:
+    def ingest(bodies: list[str]) -> tuple[list[datetime], set[str], set[str]]:
         new_times = []
         touched_ids: set[str] = set()
+        new_ids: set[str] = set()
         for body in bodies:
             stats["payloads"] += 1
             if dump_dir:
-                (Path(dump_dir) / f"{group.slug}_{stats['payloads']:04d}.txt").write_text(body)
+                (Path(dump_dir) / f"{dump_label}_{stats['payloads']:04d}.txt").write_text(body)
             for doc in _iter_json_docs(body):
                 roots: list = []
                 _collect_roots(doc, roots)
                 for root in roots:
                     stats["stories"] += 1
-                    post = _story_to_post(root, group)
+                    post = extract(root)
                     if post:
                         touched_ids.add(post["id"])
-                        if _merge(posts, post) and post["posted_at"]:
-                            new_times.append(datetime.fromisoformat(post["posted_at"]))
+                        if merge(posts, post):
+                            new_ids.add(post["id"])
+                            if post["posted_at"]:
+                                new_times.append(datetime.fromisoformat(post["posted_at"]))
                 # Timestamp backfill: pair post_ids with creation_times that
                 # live in sibling branches outside any single story root.
                 units: list = []
@@ -252,7 +313,7 @@ def scrape_group(page: Page, group: Group, cutoff: datetime, cfg: Config,
                     ct = _dig(unit, "creation_time", int)
                     if _valid_post_id(pid) and ct and pid in posts and not posts[pid]["posted_at"]:
                         posts[pid]["posted_at"] = datetime.fromtimestamp(ct).isoformat(timespec="seconds")
-        return new_times, touched_ids
+        return new_times, touched_ids, new_ids
 
     def drain() -> list[str]:
         bodies = []
@@ -272,39 +333,49 @@ def scrape_group(page: Page, group: Group, cutoff: datetime, cfg: Config,
     ingest(embedded)
     ingest(drain())
 
-    past_batches = 0
-    stale_scrolls = 0
-    known_streak = 0
-    for i in range(cfg.max_scrolls):
+    for i in range(max_scrolls):
         stats["scrolls"] = i + 1
         page.mouse.wheel(0, 6000)
         page.evaluate("window.scrollBy(0, 6000)")
-        page.wait_for_timeout(cfg.scroll_pause_ms)
+        page.wait_for_timeout(_pause(cfg))
+        _check_session(page, at_load=False)
+        if on_batch(*ingest(drain()), posts):
+            break
+    return posts, stats
 
-        new_times, touched_ids = ingest(drain())
 
+def scrape_group(page: Page, group: Group, cutoff: datetime, cfg: Config,
+                 graphql_responses: list, known_ids: set[str] = frozenset()) -> list[dict]:
+    state = {"past": 0, "stale": 0, "known": 0}
+
+    def on_batch(new_times, touched_ids, _new_ids, _posts) -> bool:
         # Independent of the timestamp cutoff below: once we're back into
         # territory the database already has, stop — this doesn't depend
         # on Facebook's ordering or timestamp parsing being exact.
         if touched_ids and touched_ids <= known_ids:
-            known_streak += 1
-            if known_streak >= KNOWN_STREAK_LIMIT:
-                break
+            state["known"] += 1
+            if state["known"] >= KNOWN_STREAK_LIMIT:
+                return True
         else:
-            known_streak = 0
+            state["known"] = 0
 
         if new_times:
-            stale_scrolls = 0
+            state["stale"] = 0
             if min(new_times) < cutoff:
-                past_batches += 1
-                if past_batches >= PAST_WINDOW_LIMIT:
-                    break
+                state["past"] += 1
+                if state["past"] >= PAST_WINDOW_LIMIT:
+                    return True
             else:
-                past_batches = 0
+                state["past"] = 0
         else:
-            stale_scrolls += 1
-            if stale_scrolls >= STALE_SCROLL_LIMIT:
-                break
+            state["stale"] += 1
+            if state["stale"] >= STALE_SCROLL_LIMIT:
+                return True
+        return False
+
+    posts, stats = _crawl(page, group.feed_url, cfg, graphql_responses,
+                          lambda root: _story_to_post(root, group), on_batch,
+                          group.slug, cfg.max_scrolls)
 
     kept = [p for p in posts.values()
             if p["posted_at"] is None or datetime.fromisoformat(p["posted_at"]) >= cutoff]

@@ -14,6 +14,7 @@ import pytest
 
 from fbtool import scrape as S
 from fbtool.config import Config, Group
+from fakes import FakePage
 
 FIXTURES = Path(__file__).parent / "fixtures"
 
@@ -30,50 +31,11 @@ def feed():
     return fx["bodies"], group, expected
 
 
-class FakeResponse:
-    def __init__(self, body):
-        self._body = body
-
-    def text(self):
-        return self._body
-
-
-class FakeMouse:
-    def __init__(self, page):
-        self.page = page
-
-    def wheel(self, dx, dy):
-        self.page.scrolls += 1
-        if self.page.batches:
-            for body in self.page.batches.pop(0):
-                self.page.responses.append(FakeResponse(body))
-
-
-class FakePage:
-    """Serves the first body as the HTML-embedded JSON and one further body
-    per scroll, the way the feed pages in more stories."""
-
-    def __init__(self, embedded, batches, responses):
-        self.embedded = embedded
-        self.batches = list(batches)
-        self.responses = responses
-        self.scrolls = 0
-        self.url = None
-        self.mouse = FakeMouse(self)
-
-    def goto(self, url, **kw):
-        self.url = url
-
-    def wait_for_timeout(self, ms):
-        pass
-
-    def query_selector(self, sel):
-        return None
-
-    def evaluate(self, js):
-        if "querySelectorAll" in js:
-            return self.embedded
-        return None
+def baseline_view(posts):
+    """The fields the baseline snapshot recorded; fields added later
+    (attachment, comment_count) are tested separately."""
+    keys = ("id", "author", "text", "posted_at", "permalink", "group_slug")
+    return sorted(({k: p[k] for k in keys} for p in posts), key=lambda p: p["id"])
 
 
 def cfg_for(group):
@@ -84,7 +46,7 @@ def run_crawl(bodies, group, cutoff, known=frozenset(), repeat=0):
     texts = [json.dumps(b) for b in bodies]
     batches = [[t] for t in texts[1:]] + [[texts[-1]]] * repeat
     responses = []
-    page = FakePage([texts[0]], batches, responses)
+    page = FakePage(responses, embedded=[texts[0]], batches=batches)
     posts = S.scrape_group(page, group, cutoff, cfg_for(group), responses, set(known))
     return posts, page
 
@@ -99,7 +61,7 @@ def test_extraction_matches_baseline(feed):
             p = S._story_to_post(r, group)
             if p:
                 S._merge(posts, p)
-    assert sorted(posts.values(), key=lambda p: p["id"]) == expected
+    assert baseline_view(posts.values()) == expected
 
 
 def test_baseline_shape(feed):
@@ -117,7 +79,7 @@ def test_baseline_shape(feed):
 def test_crawl_returns_baseline(feed):
     bodies, group, expected = feed
     posts, page = run_crawl(bodies, group, datetime(2000, 1, 1))
-    assert sorted(posts, key=lambda p: p["id"]) == expected
+    assert baseline_view(posts) == expected
     assert page.url == group.feed_url
 
 

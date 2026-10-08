@@ -28,7 +28,7 @@ def cmd_scrape(cfg, args):
     counts = {"new": 0, "updated": 0, "unchanged": 0}
     with con:
         for post in posts:
-            counts[db.upsert_post(con, post)] += 1
+            counts[db.upsert_post(con, post, owner=True)] += 1
         # A targeted backfill isn't a "run" in the delta sense: recording it
         # would make the next incremental scrape skip what the other feeds
         # posted meanwhile, and would pollute `delta` baselines.
@@ -52,6 +52,24 @@ def cmd_delta(cfg, args):
 def cmd_groups(cfg, args):
     from . import groups
     groups.report(cfg, as_yaml=args.yaml)
+
+
+def cmd_search(cfg, args):
+    from datetime import date
+    from . import search
+    filters = search.Filters(
+        recent=args.recent,
+        since=date.fromisoformat(args.since) if args.since else None,
+        until=date.fromisoformat(args.until) if args.until else None)
+    code, run_dir, record = search.search(cfg, args.queries, filters, max_results=args.max,
+                                          expand=args.expand, refresh=args.refresh)
+    if run_dir:
+        used, cap = record["budget"]["used_today"], record["budget"]["cap"]
+        print(f"{len(record['posts'])} posts from {len(args.queries)} quer"
+              f"{'y' if len(args.queries) == 1 else 'ies'} -> {run_dir / 'corpus.md'} "
+              f"(today: {used['page_loads']}/{cap['page_loads']} loads, "
+              f"{used['scrolls']}/{cap['scrolls']} scrolls, {used['queries']}/{cap['queries']} queries)")
+    sys.exit(code)
 
 
 def cmd_summarize(cfg, args):
@@ -83,6 +101,20 @@ def main():
     p_groups.add_argument("--yaml", action="store_true",
                           help="print config.yaml entries for groups not yet monitored")
 
+    p_search = sub.add_parser(
+        "search", help="search public posts by keyword; writes runs/<slug>/corpus.md + run.json",
+        description="Exit codes: 0 hits, 1 no hits, 2 daily budget refused, 3 login/checkpoint.")
+    p_search.add_argument("queries", nargs="+", help="one or more search queries")
+    p_search.add_argument("--recent", action="store_true", help="Facebook's 'Recent posts' filter")
+    p_search.add_argument("--since", help="posts on/after YYYY-MM-DD")
+    p_search.add_argument("--until", help="posts on/before YYYY-MM-DD")
+    p_search.add_argument("--max", type=int, default=100, help="max posts per query (default 100)")
+    p_search.add_argument("--expand", type=int, default=0, metavar="N",
+                          help="open the N most-commented hits to collect their top comments "
+                               "(one page load each)")
+    p_search.add_argument("--refresh", action="store_true",
+                          help="ignore results cached in the last 24 h")
+
     p_sum = sub.add_parser("summarize", help="summarize stored posts with the configured AI model")
     p_sum.add_argument("--days", type=int, default=None,
                        help="days back to summarize (default: days_back from config)")
@@ -107,7 +139,8 @@ def main():
     args = parser.parse_args()
     cfg = load()
     {"login": cmd_login, "scrape": cmd_scrape, "summarize": cmd_summarize,
-     "run": cmd_run, "delta": cmd_delta, "groups": cmd_groups}[args.command](cfg, args)
+     "run": cmd_run, "delta": cmd_delta, "groups": cmd_groups,
+     "search": cmd_search}[args.command](cfg, args)
 
 
 if __name__ == "__main__":

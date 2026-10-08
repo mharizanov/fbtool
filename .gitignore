@@ -2,6 +2,7 @@ venv/
 profile/
 logs/
 summaries/
+runs/
 __pycache__/
 *.db
 config.yaml
