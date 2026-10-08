@@ -5,6 +5,7 @@ summaries/
 runs/
 __pycache__/
 *.db
+*.db-journal
 config.yaml
 
 .DS_Store

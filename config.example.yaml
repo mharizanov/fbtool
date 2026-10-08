@@ -47,9 +47,9 @@ openai_api_key: "sk-..."      # or leave unset to use the OPENAI_API_KEY env var
 # Daily cap on search load (`fbtool search`, `--expand`, `fbtool find`);
 # feed scrapes don't count. Facebook rate-limits search harder than feeds.
 search_budget:
-  page_loads: 60
-  scrolls: 300
-  queries: 20
+  page_loads: 180
+  scrolls: 900
+  queries: 60
 
 # Paths (relative to the project directory)
 profile_dir: profile          # persistent Chromium profile (holds your FB login)

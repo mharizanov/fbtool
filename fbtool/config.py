@@ -28,7 +28,7 @@ class Group:
         return f"https://www.facebook.com/{self.path}/posts/{post_id}/"
 
 
-DEFAULT_SEARCH_BUDGET = {"page_loads": 60, "scrolls": 300, "queries": 20}
+DEFAULT_SEARCH_BUDGET = {"page_loads": 180, "scrolls": 900, "queries": 60}
 
 
 @dataclass

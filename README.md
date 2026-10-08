@@ -94,8 +94,8 @@ Practical guidance:
   another country with the same profile.
 - **Search is riskier than feed reading.** Facebook rate-limits search
   harder, so `search` and `find` run under a daily budget of page loads,
-  scrolls and queries (`search_budget` in config.yaml, default 60 / 300 /
-  20) and refuse up front when a run would exceed it. A checkpoint
+  scrolls and queries (`search_budget` in config.yaml, default 180 / 900 /
+  60) and refuse up front when a run would exceed it. A checkpoint
   mid-run, or a login wall when a page loads, stops `scrape`, `search` and
   `find` at once instead of retrying.
 
@@ -172,7 +172,7 @@ a single browser session and writes a run directory:
 venv/bin/python -m fbtool search "heat pump noise" "air-to-water heat pump review" \
     --since 2025-10-01 --max 40 --expand 5
 # 112 posts from 2 queries -> runs/heat-pump-noise+1-more-20261008-133348/corpus.md
-#   (today: 7/60 loads, 30/300 scrolls, 2/20 queries)
+#   (today: 7/180 loads, 30/900 scrolls, 2/60 queries)
 ```
 
 - `corpus.md` — one block per post: id, group or Page, author, time,
