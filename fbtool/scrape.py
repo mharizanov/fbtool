@@ -90,6 +90,21 @@ def _collect_roots(obj, out: list) -> None:
             stack.extend(cur)
 
 
+def _collect_roots_ordered(obj, out: list) -> None:
+    """_collect_roots in document order (pre-order). Search results come as
+    an ordered edge list and their rank matters; the feed path keeps
+    _collect_roots, whose order it doesn't depend on."""
+    stack = [obj]
+    while stack:
+        cur = stack.pop()
+        if isinstance(cur, dict):
+            if "comet_sections" in cur:
+                out.append(cur)
+            stack.extend(reversed(list(cur.values())))
+        elif isinstance(cur, list):
+            stack.extend(reversed(cur))
+
+
 def _find_units(obj, out: list) -> tuple[bool, bool, bool]:
     """Append the minimal dicts whose subtree contains BOTH a post_id and a
     creation_time — Facebook keeps them in sibling branches, so this is how
@@ -264,12 +279,14 @@ def _pause(cfg: Config) -> int:
 
 
 def _crawl(page: Page, url: str, cfg: Config, graphql_responses: list, extract,
-           on_batch, dump_label: str, max_scrolls: int, merge=None) -> tuple[dict, dict]:
+           on_batch, dump_label: str, max_scrolls: int, merge=None,
+           collect=None) -> tuple[dict, dict]:
     """Load `url`, then scroll, turning every story rendering in the
     captured payloads into a post via `extract(root)` and folding partial
     renderings together with `merge` (default _merge). After each scroll,
     `on_batch(new_times, touched_ids, new_ids, posts)` decides whether to stop."""
     merge = merge or _merge
+    collect = collect or _collect_roots
     graphql_responses.clear()
     page.goto(url, wait_until="domcontentloaded", timeout=60_000)
     page.wait_for_timeout(6000)
@@ -294,7 +311,7 @@ def _crawl(page: Page, url: str, cfg: Config, graphql_responses: list, extract,
                 (Path(dump_dir) / f"{dump_label}_{stats['payloads']:04d}.txt").write_text(body)
             for doc in _iter_json_docs(body):
                 roots: list = []
-                _collect_roots(doc, roots)
+                collect(doc, roots)
                 for root in roots:
                     stats["stories"] += 1
                     post = extract(root)

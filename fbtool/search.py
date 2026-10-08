@@ -27,7 +27,8 @@ from playwright.sync_api import sync_playwright
 
 from . import db
 from .config import Config
-from .scrape import (POST_URL_RE, STALE_SCROLL_LIMIT, CheckpointError, _crawl, _dig, _merge,
+from .scrape import (POST_URL_RE, STALE_SCROLL_LIMIT, CheckpointError, _collect_roots_ordered,
+                     _crawl, _dig, _merge,
                      _story_fields, _walk, ensure_logged_in, open_context)
 
 SEARCH_URL = "https://www.facebook.com/search/posts?q="
@@ -242,7 +243,8 @@ def _crawl_search(page, responses, cfg, query, filters, resolver, max_results, m
 
     return _crawl(page, search_url(query, filters), cfg, responses,
                   lambda root: _story_to_hit(root, resolver), on_batch,
-                  f"search_{slugify(query)}", max_scrolls, merge=_merge_hit)
+                  f"search_{slugify(query)}", max_scrolls, merge=_merge_hit,
+                  collect=_collect_roots_ordered)
 
 
 def _expand(page, responses, cfg, post, resolver):

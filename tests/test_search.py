@@ -272,3 +272,12 @@ def test_known_origin_replaces_unknown(tmp_path):
     db.upsert_post(con, {**base, "group_slug": "777", "permalink": "https://www.facebook.com/groups/777/posts/6000/"})
     assert tuple(con.execute("SELECT group_slug, permalink FROM posts").fetchone()) == (
         "777", "https://www.facebook.com/groups/777/posts/6000/")
+
+
+def test_rank_follows_result_order(tmp_path):
+    cfg = make_cfg(tmp_path)
+    edges = [{"node": story(str(7000 + i), f"r{i}", url=f"https://www.facebook.com/groups/9/posts/{7000 + i}/")}
+             for i in range(4)]
+    code, _, record, _ = run(cfg, script_for([{"data": {"results": {"edges": edges}}}]))
+    assert [p["id"] for p in record["posts"]] == ["7000", "7001", "7002", "7003"]
+    assert [p["matched"][0]["rank"] for p in record["posts"]] == [1, 2, 3, 4]
