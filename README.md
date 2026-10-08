@@ -95,9 +95,9 @@ Practical guidance:
 - **Search is riskier than feed reading.** Facebook rate-limits search
   harder, so `search` and `find` run under a daily budget of page loads,
   scrolls and queries (`search_budget` in config.yaml, default 60 / 300 /
-  20) and refuse up front when a run would exceed it. If Facebook shows a
-  checkpoint or a login wall mid-run, every command stops at once instead
-  of retrying.
+  20) and refuse up front when a run would exceed it. A checkpoint
+  mid-run, or a login wall when a page loads, stops `scrape`, `search` and
+  `find` at once instead of retrying.
 
 ## Setup
 
