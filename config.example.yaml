@@ -44,7 +44,15 @@ openai_api_key: "sk-..."      # or leave unset to use the OPENAI_API_KEY env var
 # base_url: ""                # override the endpoint; defaults are
 #                             # ollama http://localhost:11434/v1, vllm http://localhost:8000/v1
 
+# Daily cap on search load (`fbtool search`, `--expand`, `fbtool find`);
+# feed scrapes don't count. Facebook rate-limits search harder than feeds.
+search_budget:
+  page_loads: 60
+  scrolls: 300
+  queries: 20
+
 # Paths (relative to the project directory)
 profile_dir: profile          # persistent Chromium profile (holds your FB login)
 db_path: fbtool.db
 output_dir: summaries
+runs_dir: runs               # search run directories (gitignored)

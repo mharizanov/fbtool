@@ -79,10 +79,10 @@ def connect(path: Path) -> sqlite3.Connection:
     cols = {r[1] for r in con.execute("PRAGMA table_info(posts)")}
     if "updated_at" not in cols:
         con.execute("ALTER TABLE posts ADD COLUMN updated_at TEXT")
-    for col in ("attachment", "comment_count"):
+    for col, kind in (("attachment", "TEXT"), ("comment_count", "INTEGER"),
+                      ("found_by", "TEXT")):  # found_by: 'search' | null (a feed scrape)
         if col not in cols:
-            con.execute(f"ALTER TABLE posts ADD COLUMN {col} "
-                        f"{'INTEGER' if col == 'comment_count' else 'TEXT'}")
+            con.execute(f"ALTER TABLE posts ADD COLUMN {col} {kind}")
     return con
 
 
@@ -97,14 +97,14 @@ def upsert_post(con: sqlite3.Connection, post: dict, owner: bool = False) -> str
     replaced by any known one."""
     row = con.execute("SELECT text, posted_at, group_slug, attachment, comment_count "
                       "FROM posts WHERE id = ?", (post["id"],)).fetchone()
-    post = {"attachment": None, "comment_count": None, **post}
+    post = {"attachment": None, "comment_count": None, "found_by": None, **post}
     if row is None:
         con.execute(
             """
             INSERT INTO posts (id, group_slug, author, text, posted_at, permalink, scraped_at,
-                               attachment, comment_count)
+                               attachment, comment_count, found_by)
             VALUES (:id, :group_slug, :author, :text, :posted_at, :permalink, :scraped_at,
-                    :attachment, :comment_count)
+                    :attachment, :comment_count, :found_by)
             """,
             post,
         )
@@ -159,10 +159,17 @@ def posts_since(con: sqlite3.Connection, group_slug: str, since_iso: str) -> lis
 
 
 def new_posts_since(con: sqlite3.Connection, group_slug: str, since_iso: str) -> list[sqlite3.Row]:
-    """Posts first seen at or after `since_iso`."""
+    """Posts first seen at or after `since_iso`. A post a search found first
+    counts only if it was also posted after `since_iso`: a search reaches
+    months back, and its old hits aren't news."""
     return con.execute(
-        "SELECT * FROM posts WHERE group_slug = ? AND scraped_at >= ? ORDER BY posted_at",
-        (group_slug, since_iso),
+        """
+        SELECT * FROM posts
+        WHERE group_slug = ? AND scraped_at >= ?
+          AND (found_by IS NULL OR posted_at IS NULL OR posted_at >= ?)
+        ORDER BY posted_at
+        """,
+        (group_slug, since_iso, since_iso),
     ).fetchall()
 
 

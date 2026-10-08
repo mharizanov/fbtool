@@ -281,3 +281,29 @@ def test_rank_follows_result_order(tmp_path):
     code, _, record, _ = run(cfg, script_for([{"data": {"results": {"edges": edges}}}]))
     assert [p["id"] for p in record["posts"]] == ["7000", "7001", "7002", "7003"]
     assert [p["matched"][0]["rank"] for p in record["posts"]] == [1, 2, 3, 4]
+
+
+def test_term_match_orders_and_flags(tmp_path):
+    assert SR.term_match({"text": "Нова термопомпи у дома"}, ["термопомпа Mitsubishi"])
+    assert SR.term_match({"text": "x", "source_name": "MeshCore UK"}, ["meshcore"])
+    assert SR.term_match({"text": "", "attachment": "Solaris review"}, ["Solaris"])
+    assert not SR.term_match({"text": "Volvo L90 Electric"}, ["Hyperheat"])
+    cfg = make_cfg(tmp_path)
+    docs = [{"data": {"edges": [
+        {"node": story("8000", "car ad", url="https://www.facebook.com/groups/9/posts/8000/")},
+        {"node": story("8001", "hyperheat review", url="https://www.facebook.com/groups/9/posts/8001/")}]}}]
+    _, run_dir, record, _ = run(cfg, script_for(docs), queries=("Hyperheat",))
+    assert [(p["id"], p["term_match"]) for p in record["posts"]] == [("8001", True), ("8000", False)]
+    corpus = (run_dir / "corpus.md").read_text()
+    assert corpus.index("post 8001") < corpus.index("=== no query word") < corpus.index("post 8000")
+
+
+def test_delta_ignores_old_search_hits(tmp_path):
+    con = db.connect(tmp_path / "t.db")
+    common = {"group_slug": "g", "author": "A", "text": "t", "permalink": "p",
+              "scraped_at": "2026-10-08T12:00:00"}
+    db.upsert_post(con, {**common, "id": "9001", "posted_at": "2026-03-01T10:00:00", "found_by": "search"})
+    db.upsert_post(con, {**common, "id": "9002", "posted_at": "2026-10-08T09:00:00", "found_by": "search"})
+    db.upsert_post(con, {**common, "id": "9003", "posted_at": "2026-03-01T10:00:00"})  # feed
+    new = {r["id"] for r in db.new_posts_since(con, "g", "2026-10-07T00:00:00")}
+    assert new == {"9002", "9003"}

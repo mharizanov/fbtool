@@ -72,6 +72,13 @@ def cmd_search(cfg, args):
     sys.exit(code)
 
 
+def cmd_find(cfg, args):
+    from . import find
+    code, found = find.find(cfg, args.kind, " ".join(args.query), max_results=args.max)
+    find.report(cfg, args.kind, found, as_yaml=args.yaml)
+    sys.exit(code)
+
+
 def cmd_summarize(cfg, args):
     from . import summarize
     out = summarize.summarize(cfg, days=args.days)
@@ -85,7 +92,7 @@ def cmd_run(cfg, args):
 
 def main():
     parser = argparse.ArgumentParser(prog="fbtool",
-                                     description="Monitor and summarize Facebook groups")
+                                     description="Monitor, summarize and search Facebook groups and Pages")
     sub = parser.add_subparsers(dest="command", required=True)
 
     sub.add_parser("login", help="open a browser to log in to Facebook (one-time)")
@@ -115,6 +122,16 @@ def main():
     p_search.add_argument("--refresh", action="store_true",
                           help="ignore results cached in the last 24 h")
 
+    p_find = sub.add_parser(
+        "find", help="discover groups or Pages by topic; --yaml prints config entries",
+        description="Counts against the daily search budget (one page load). "
+                    "Exit codes: 0 found, 1 none, 2 budget refused, 3 login/checkpoint.")
+    p_find.add_argument("kind", choices=["groups", "pages"])
+    p_find.add_argument("query", nargs="+")
+    p_find.add_argument("--max", type=int, default=20, help="max results (default 20)")
+    p_find.add_argument("--yaml", action="store_true",
+                        help="print config.yaml entries for results not yet monitored")
+
     p_sum = sub.add_parser("summarize", help="summarize stored posts with the configured AI model")
     p_sum.add_argument("--days", type=int, default=None,
                        help="days back to summarize (default: days_back from config)")
@@ -140,7 +157,7 @@ def main():
     cfg = load()
     {"login": cmd_login, "scrape": cmd_scrape, "summarize": cmd_summarize,
      "run": cmd_run, "delta": cmd_delta, "groups": cmd_groups,
-     "search": cmd_search}[args.command](cfg, args)
+     "search": cmd_search, "find": cmd_find}[args.command](cfg, args)
 
 
 if __name__ == "__main__":

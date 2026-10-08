@@ -1,4 +1,4 @@
-# fbtool — Facebook group monitor & summarizer
+# fbtool — Facebook group monitor, summarizer & search
 
 Turns Facebook groups you're a member of — including private ones — into a
 periodic LLM digest, entirely on your own machine. It scrapes with a real
@@ -12,6 +12,12 @@ with their own accounts so they can't get into members-only groups, and
 the classic DOM scrapers break whenever Facebook reshuffles its markup.
 fbtool captures the feed's GraphQL payloads instead, and your session
 never leaves your machine.
+
+Beyond the groups you follow, `fbtool search` turns Facebook's post search
+into a research corpus: give it a few queries, and it writes every matching
+public post (with its group or Page, author, time and link) to a Markdown
+file an LLM can read. `fbtool find` discovers groups and Pages by topic.
+See [Searching public posts](#searching-public-posts).
 
 The backstory — why the groups are worth reading but the feed isn't — is in
 the blog post: [Turning Facebook groups into a daily
@@ -86,6 +92,12 @@ Practical guidance:
   primary account with it.
 - Keep the cadence low, and don't suddenly run the scrape from a VPS in
   another country with the same profile.
+- **Search is riskier than feed reading.** Facebook rate-limits search
+  harder, so `search` and `find` run under a daily budget of page loads,
+  scrolls and queries (`search_budget` in config.yaml, default 60 / 300 /
+  20) and refuse up front when a run would exceed it. If Facebook shows a
+  checkpoint or a login wall mid-run, every command stops at once instead
+  of retrying.
 
 ## Setup
 
@@ -98,7 +110,9 @@ venv/bin/playwright install chromium
 
 1. Copy the config and add your group slugs (the part after
    `facebook.com/groups/`). Public Pages work too: add the entry with
-   `type: page` and the slug after `facebook.com/`.
+   `type: page` and the slug after `facebook.com/` (for a Page without a
+   vanity name, the number from `profile.php?id=`). `fbtool find` prints
+   ready-made entries.
 
    ```sh
    cp config.example.yaml config.yaml
@@ -149,6 +163,59 @@ baseline for `delta`:
 venv/bin/python -m fbtool scrape --group mare --since 2025-08-01
 ```
 
+## Searching public posts
+
+`fbtool search` runs one or more queries through Facebook's post search in
+a single browser session and writes a run directory:
+
+```sh
+venv/bin/python -m fbtool search "heat pump noise" "air-to-water heat pump review" \
+    --since 2025-10-01 --max 40 --expand 5
+# 112 posts from 2 queries -> runs/heat-pump-noise+1-more-20261008-133348/corpus.md
+#   (today: 7/60 loads, 30/300 scrolls, 2/20 queries)
+```
+
+- `corpus.md` — one block per post: id, group or Page, author, time,
+  permalink, which query found it at which rank, comment count, then the
+  text (and a link attachment's title). Posts that contain a query word
+  come first; below a marker line follow the loosely related results
+  Facebook pads its lists with.
+- `run.json` — the same, machine-readable, plus per-query status, cache use
+  and the day's budget.
+
+Options: `--recent` (Facebook's "Recent posts" filter), `--since` /
+`--until YYYY-MM-DD` (Facebook's date filter, also applied to the results),
+`--max N` posts per query (default 100), `--refresh` (ignore the 24-hour
+result cache). Search results carry comment counts but not the comments;
+`--expand N` opens the N most-commented hits to collect their top comments,
+one page load each.
+
+The tool does no LLM calls of its own: it is built to be driven by a person
+or a coding agent (Claude Code, for one) that plans the queries, runs the
+command, and reads `corpus.md`. Exit codes are stable for that: 0 hits, 1
+no hits, 2 daily budget refused, 3 login wall or checkpoint.
+
+Hits are stored in `fbtool.db` like feed posts. A hit from a group or Page
+you monitor gets that feed's slug, so it is the same row the next scrape
+updates; `delta` reports a post first found by a search only if it was also
+posted after the baseline. Hits from anywhere else stay out of the daily
+summary and `delta`. Run directories hold other people's posts and are
+gitignored.
+
+### Finding groups and Pages
+
+```sh
+venv/bin/python -m fbtool find groups "heat pumps"
+venv/bin/python -m fbtool find pages "heat pump installer" --yaml
+```
+
+Lists results with the group's privacy, size and activity ("Public · 4.8K
+members · 3 posts a day") and whether the account is a member, or a Page's
+category and followers; monitored ones are marked `*`. `--yaml` prints
+config entries for the rest. Public groups can be monitored without
+joining; groups that need approval or are private come out commented. Each
+`find` costs one page load of the search budget.
+
 ## What's new since the last scrape
 
 Every scrape records a run, and `fbtool delta` reports what the latest one
@@ -181,10 +248,17 @@ it. Everything lands in a single `posts` table in `fbtool.db`:
 - `posted_at` — exact ISO timestamp (null when it couldn't be paired)
 - `scraped_at` — when the post was first seen
 - `updated_at` — when a re-scrape last grew the post's text (null: never)
+- `attachment`, `comment_count` — a link attachment's title/description
+  and the comment count, when the payload has them
+- `found_by` — `search` when a search stored the post first (null: a feed
+  scrape)
 
 Two side tables support `fbtool delta`: `runs` (one row per scrape, the
 baselines deltas compare against) and `post_versions` (the superseded text
-of updated posts, so a delta can show exactly what was added).
+of updated posts, so a delta can show exactly what was added). Search adds
+`queries` and `search_hits` (which query returned which post at which
+rank), `sources` (name and URL of the groups, Pages and authors hits come
+from) and `search_budget` (per-day load).
 
 Dump a window with plain SQL:
 
@@ -271,3 +345,10 @@ unattended runs so that window never needs to appear on its own.
   (read-only reporting). The scrape itself stays a full-window crawl on
   purpose — re-visiting known posts is what refreshes their comments; deltas
   are computed at the write path, not by crawling less.
+- Search lives in `fbtool/search.py` (query URL and filters, origin
+  resolution, budget, run directory) and `fbtool/find.py`; both reuse the
+  feed's crawl loop (`_crawl` in `scrape.py`).
+- Tests: `venv/bin/pip install pytest && venv/bin/python -m pytest`. The
+  fixtures under `tests/fixtures/` are synthetic: real payload structure
+  with every id, name and text replaced. `feed_group.expected.json` pins
+  the feed extractor's output; keep it green when touching `scrape.py`.

@@ -213,6 +213,21 @@ def _merge_hit(posts: dict, post: dict) -> bool:
 
 # ---------------------------------------------------------------- run
 
+def term_match(post: dict, queries: list[str]) -> bool:
+    """Does any word of the queries that found this post occur in its text,
+    attachment or source name? Facebook pads result lists with loosely
+    related posts; these sort last. Words match on a stem (all but the last
+    two letters, at least four) so inflections count: "термопомпа" matches
+    "термопомпи"."""
+    hay = " ".join(str(x or "") for x in (post.get("text"), post.get("attachment"),
+                                          post.get("source_name"))).casefold()
+    for q in queries:
+        for word in re.findall(r"\w{3,}", q.casefold()):
+            if word[:max(4, len(word) - 2)] in hay:
+                return True
+    return False
+
+
 def slugify(text: str) -> str:
     t = unicodedata.normalize("NFKC", text).lower()
     return re.sub(r"[^\w]+", "-", t).strip("-")[:50] or "search"
@@ -319,6 +334,7 @@ def search(cfg: Config, queries: list[str], filters: Filters = Filters(),
                     ranked = [p for p in posts.values() if filters.keep(p["posted_at"])][:max_results]
                     for p in ranked:
                         p["scraped_at"] = now_iso
+                        p["found_by"] = "search"
                         db.upsert_post(con, p)
                         o = p["origin"]
                         if o["kind"] != "unknown":
@@ -361,8 +377,11 @@ def search(cfg: Config, queries: list[str], filters: Filters = Filters(),
     record["budget"] = {"cap": cfg.search_budget, "used_today": db.budget_used(con, day)}
     con.close()
 
+    for p in run_posts.values():
+        p["term_match"] = term_match(p, [m["query"] for m in p["matched"]])
     ordered = sorted(run_posts.values(),
-                     key=lambda p: (min(m["rank"] for m in p["matched"]), -len(p["matched"])))
+                     key=lambda p: (not p["term_match"], min(m["rank"] for m in p["matched"]),
+                                    -len(p["matched"])))
     record["posts"] = [{
         "id": p["id"],
         "matched": p["matched"],
@@ -371,6 +390,7 @@ def search(cfg: Config, queries: list[str], filters: Filters = Filters(),
         "author": p["author"], "posted_at": p["posted_at"], "permalink": p["permalink"],
         "comment_count": p["comment_count"], "has_comments": "[top comments]" in (p["text"] or ""),
         "attachment": p["attachment"], "chars": len(p["text"] or ""),
+        "term_match": p["term_match"],
     } for p in ordered]
 
     run_dir = _write_run(cfg, queries, now, record, ordered, filters)
@@ -386,10 +406,16 @@ def _write_run(cfg, queries, now, record, ordered, filters) -> Path:
     meta = {p["id"]: p for p in record["posts"]}
     lines = [f"# fbtool search: {' | '.join(queries)}",
              f"{len(ordered)} posts · filters: {filters.describe()} · {record['created_at']}",
-             "Blocks are ordered by best search rank. `matched` = query and rank; "
-             "comments are present only when the post was expanded.", ""]
+             "Blocks are ordered by best search rank, posts that contain a query word "
+             "first. `matched` = query and rank; comments are present only when the "
+             "post was expanded.", ""]
+    tail = False
     for p in ordered:
         m = meta[p["id"]]
+        if not p["term_match"] and not tail:
+            tail = True
+            lines.append("=== no query word in the posts below: Facebook's loosely related "
+                         "results, often noise ===\n")
         o = m["origin"]
         label = {"author": "page/profile"}.get(o["kind"], o["kind"])
         where = f"{label}: {o['name'] or o['slug']}" + (f" ({o['url']})" if o["url"] else "")

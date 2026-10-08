@@ -22,41 +22,217 @@
 {
 "node": {
 "role": "ENTITY_GROUPS"
+},
+"rendering_strategy": {
+"view_model": {
+"profile": {
+"__typename": "Group",
+"id": "1761193813232214",
+"url": "https://www.facebook.com/groups/samplefeed1/",
+"name": "Mila Filipov"
+},
+"primary_snippet_text_with_entities": {
+"text": "Private · 75 members"
+},
+"ctas": {
+"primary": [
+{
+"profile": {
+"viewer_join_state": "CAN_JOIN"
+}
+}
+]
+}
+}
 }
 },
 {
 "node": {
 "role": "ENTITY_GROUPS"
+},
+"rendering_strategy": {
+"view_model": {
+"profile": {
+"__typename": "Group",
+"id": "1062555706899837",
+"url": "https://www.facebook.com/groups/1062555706899837/",
+"name": "Kalin Bonev"
+},
+"primary_snippet_text_with_entities": {
+"text": "Public · 2.1K members"
+},
+"ctas": {
+"primary": [
+{
+"profile": {
+"viewer_join_state": "CAN_JOIN"
+}
+}
+]
+}
+}
 }
 },
 {
 "node": {
 "role": "ENTITY_GROUPS"
+},
+"rendering_strategy": {
+"view_model": {
+"profile": {
+"__typename": "Group",
+"id": "7868735422472746",
+"url": "https://www.facebook.com/groups/7868735422472746/",
+"name": "Emil Iliev"
+},
+"primary_snippet_text_with_entities": {
+"text": "Public · 12K members · 5 posts a day"
+},
+"ctas": {
+"primary": [
+{
+"profile": {
+"viewer_join_state": "CAN_JOIN"
+}
+}
+]
+}
+}
 }
 },
 {
 "node": {
 "role": "ENTITY_GROUPS"
+},
+"rendering_strategy": {
+"view_model": {
+"profile": {
+"__typename": "Group",
+"id": "6244813330590838",
+"url": "https://www.facebook.com/groups/6244813330590838/",
+"name": "Hristo Filipov"
+},
+"primary_snippet_text_with_entities": {
+"text": "Private · 310 members"
+},
+"ctas": {
+"primary": [
+{
+"profile": {
+"viewer_join_state": "MEMBER"
+}
+}
+]
+}
+}
 }
 },
 {
 "node": {
 "role": "ENTITY_GROUPS"
+},
+"rendering_strategy": {
+"view_model": {
+"profile": {
+"__typename": "Group",
+"id": "6746167469018876",
+"url": "https://www.facebook.com/groups/6746167469018876/",
+"name": "Nikola Atanasov"
+},
+"primary_snippet_text_with_entities": {
+"text": "Public · 950 members"
+},
+"ctas": {
+"primary": [
+{
+"profile": {
+"viewer_join_state": "CAN_JOIN"
+}
+}
+]
+}
+}
 }
 },
 {
 "node": {
 "role": "ENTITY_GROUPS"
+},
+"rendering_strategy": {
+"view_model": {
+"profile": {
+"__typename": "Group",
+"id": "4418139644886257",
+"url": "https://www.facebook.com/groups/samplefeed2/",
+"name": "Hristo Hadjiev"
+},
+"primary_snippet_text_with_entities": {
+"text": "Private · 1.2K members · 2 posts a week"
+},
+"ctas": {
+"primary": [
+{
+"profile": {
+"viewer_join_state": "CAN_JOIN"
+}
+}
+]
+}
+}
 }
 },
 {
 "node": {
 "role": "ENTITY_GROUPS"
+},
+"rendering_strategy": {
+"view_model": {
+"profile": {
+"__typename": "Group",
+"id": "772746699932906",
+"url": "https://www.facebook.com/groups/772746699932906/",
+"name": "Fani Atanasov"
+},
+"primary_snippet_text_with_entities": {
+"text": "Public · 4.7K members"
+},
+"ctas": {
+"primary": [
+{
+"profile": {
+"viewer_join_state": "CAN_JOIN"
+}
+}
+]
+}
+}
 }
 },
 {
 "node": {
 "role": "ENTITY_GROUPS"
+},
+"rendering_strategy": {
+"view_model": {
+"profile": {
+"__typename": "Group",
+"id": "9742757646993033",
+"url": "https://www.facebook.com/groups/9742757646993033/",
+"name": "Nikola Dimov"
+},
+"primary_snippet_text_with_entities": {
+"text": "Public · 31K members · 9 posts a day"
+},
+"ctas": {
+"primary": [
+{
+"profile": {
+"viewer_join_state": "CAN_JOIN"
+}
+}
+]
+}
+}
 }
 }
 ]

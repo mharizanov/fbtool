@@ -22,41 +22,170 @@
 {
 "node": {
 "role": "ENTITY_PAGES"
+},
+"rendering_strategy": {
+"view_model": {
+"profile": {
+"__typename": "User",
+"id": "576104775905271",
+"url": "https://www.facebook.com/samplefeed3",
+"name": "Petia Bonev"
+},
+"primary_snippet_text_with_entities": {
+"text": "Company · 15 followers"
+},
+"description_snippets_text_with_entities": [
+{
+"text": "adipiscing sit ipsum lorem lorem labore minim exercitation laboris ut minim eiusmod enim n"
+}
+]
+}
 }
 },
 {
 "node": {
 "role": "ENTITY_PAGES"
+},
+"rendering_strategy": {
+"view_model": {
+"profile": {
+"__typename": "User",
+"id": "18074228915271",
+"url": "https://www.facebook.com/profile.php?id=18074228915271",
+"name": "Iva Kolev"
+},
+"primary_snippet_text_with_entities": {
+"text": "Home improvement · 2.4K followers"
+}
+}
 }
 },
 {
 "node": {
 "role": "ENTITY_PAGES"
+},
+"rendering_strategy": {
+"view_model": {
+"profile": {
+"__typename": "User",
+"id": "262203586476667",
+"url": "https://www.facebook.com/samplefeed4",
+"name": "Dara Iliev"
+},
+"primary_snippet_text_with_entities": {
+"text": "Contractor · 87 followers"
+},
+"description_snippets_text_with_entities": [
+{
+"text": "ullamco ut adipiscing sit dolore sed amet dolor ipsum "
+}
+]
+}
 }
 },
 {
 "node": {
 "role": "ENTITY_PAGES"
+},
+"rendering_strategy": {
+"view_model": {
+"profile": {
+"__typename": "User",
+"id": "13508542943566",
+"url": "https://www.facebook.com/profile.php?id=13508542943566",
+"name": "Lora Hadjiev"
+},
+"primary_snippet_text_with_entities": {
+"text": "Shopping & retail · 12K followers"
+},
+"description_snippets_text_with_entities": [
+{
+"text": "exercitation inci"
+}
+]
+}
 }
 },
 {
 "node": {
 "role": "ENTITY_PAGES"
+},
+"rendering_strategy": {
+"view_model": {
+"profile": {
+"__typename": "User",
+"id": "249169383001841",
+"url": "https://www.facebook.com/profile.php?id=249169383001841",
+"name": "Mila Lazarov"
+},
+"primary_snippet_text_with_entities": {
+"text": "Product/service · 340 followers"
+}
+}
 }
 },
 {
 "node": {
 "role": "ENTITY_PAGES"
+},
+"rendering_strategy": {
+"view_model": {
+"profile": {
+"__typename": "User",
+"id": "925476164725020",
+"url": "https://www.facebook.com/profile.php?id=925476164725020",
+"name": "Mila Atanasov"
+},
+"primary_snippet_text_with_entities": {
+"text": "Local business · 1.1K followers"
+},
+"description_snippets_text_with_entities": [
+{
+"text": "eiusmod consectetur dolor ipsum lorem lorem lorem lorem lorem lorem labore elit sit ipsum et elit s"
+}
+]
+}
 }
 },
 {
 "node": {
 "role": "ENTITY_PAGES"
+},
+"rendering_strategy": {
+"view_model": {
+"profile": {
+"__typename": "User",
+"id": "80139127022915",
+"url": "https://www.facebook.com/profile.php?id=80139127022915",
+"name": "Ana Lazarov"
+},
+"primary_snippet_text_with_entities": {
+"text": "Air conditioning · 3 followers"
+}
+}
 }
 },
 {
 "node": {
 "role": "ENTITY_PAGES"
+},
+"rendering_strategy": {
+"view_model": {
+"profile": {
+"__typename": "User",
+"id": "762563745716179",
+"url": "https://www.facebook.com/profile.php?id=762563745716179",
+"name": "Cvetan Georgiev"
+},
+"primary_snippet_text_with_entities": {
+"text": "Building supplies · 590 followers"
+},
+"description_snippets_text_with_entities": [
+{
+"text": "enim nostrud incididunt adipiscing sit ips"
+}
+]
+}
 }
 }
 ]
