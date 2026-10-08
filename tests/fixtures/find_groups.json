@@ -1,0 +1,79 @@
+{
+"source": "find_groups",
+"group_slug": "search",
+"group_kind": "page",
+"bodies": [
+{
+"require": [
+[
+[
+{
+"__bbox": {
+"require": [
+[
+[
+{
+"__bbox": {
+"result": {
+"data": {
+"serpResponse": {
+"results": {
+"edges": [
+{
+"node": {
+"role": "ENTITY_GROUPS"
+}
+},
+{
+"node": {
+"role": "ENTITY_GROUPS"
+}
+},
+{
+"node": {
+"role": "ENTITY_GROUPS"
+}
+},
+{
+"node": {
+"role": "ENTITY_GROUPS"
+}
+},
+{
+"node": {
+"role": "ENTITY_GROUPS"
+}
+},
+{
+"node": {
+"role": "ENTITY_GROUPS"
+}
+},
+{
+"node": {
+"role": "ENTITY_GROUPS"
+}
+},
+{
+"node": {
+"role": "ENTITY_GROUPS"
+}
+}
+]
+}
+}
+}
+}
+}
+}
+]
+]
+]
+}
+}
+]
+]
+]
+}
+]
+}

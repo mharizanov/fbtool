@@ -1,0 +1,554 @@
+{
+"source": "group",
+"group_slug": "6244813330590838",
+"group_kind": "group",
+"bodies": [
+{
+"data": {
+"node": {
+"group_feed": {
+"edges": [
+{
+"node": {
+"comet_sections": {
+"content": {
+"story": {
+"comet_sections": {
+"message_container": {
+"story": {
+"comet_sections": {}
+}
+}
+},
+"post_id": "5422728740398340",
+"actors": [
+{
+"name": "Rumen Filipov"
+}
+],
+"message": {
+"text": "incididunt adipiscing sit dolore ven\nut minim eiusmod consectetur magn\ndolore sed amet dolore sed amet \nadipisc\nullamco labori\net elit sit ipsum lorem lorem labore minim exercitation laboris ut minim \net elit sit dolore sed amet dolor et veniam exercitation \nut adipiscing sit ipsum et eli\n\nconsectetur dolor"
+},
+"wwwURL": "https://www.facebook.com/groups/6244813330590838/permalink/5422728740398340/"
+}
+},
+"context_layout": {
+"story": {
+"comet_sections": {
+"actor_photo": {
+"story": {
+"comet_sections": {
+"action_link": {
+"group": {
+"id": "6244813330590838",
+"__typename": "Group"
+}
+}
+}
+}
+},
+"metadata": [
+{
+"story": {
+"creation_time": 1790884496
+}
+}
+],
+"title": {
+"story": {
+"post_id": "5422728740398340",
+"actors": [
+{
+"name": "Rumen Filipov"
+}
+],
+"comet_sections": {
+"action_link": {
+"group": {
+"id": "6244813330590838",
+"__typename": "Group"
+}
+}
+},
+"to": {
+"__typename": "Group",
+"id": "6244813330590838",
+"url": "https://www.facebook.com/groups/6244813330590838/",
+"name": "Hristo Filipov"
+}
+}
+}
+}
+}
+},
+"feedback": {
+"story": {
+"story_ufi_container": {
+"story": {
+"feedback_context": {
+"interesting_top_level_comments": [
+{
+"comment": {
+"body": {
+"text": "laboris ut minim eiusmod enim do amet dolor et veniam exercitation laboris ut minim exercitation laboris nisi labore minim eiusmod enim nostrud ullamco ut minim eiusmod enim do amet dolore veniam tempor co"
+},
+"author": {
+"name": "Dara Atanasov"
+}
+}
+}
+]
+}
+}
+}
+}
+}
+},
+"permalink_url": "https://www.facebook.com/groups/6244813330590838/posts/5422728740398340/"
+}
+}
+]
+}
+}
+}
+},
+{
+"data": {
+"node": {
+"comet_sections": {
+"content": {
+"story": {
+"comet_sections": {
+"message_container": {
+"story": {
+"comet_sections": {}
+}
+}
+},
+"post_id": "8813335503105716",
+"actors": [
+{
+"name": "Rumen Filipov"
+}
+],
+"message": {
+"text": "et elit sit dolore veniam exercitation laboris nisi labore elit sit ipsum lorem labore elit aliqua quis tempor ad eiusmod consectetur dolor ipsum et veniam exercitation incidi"
+},
+"wwwURL": "https://www.facebook.com/groups/6244813330590838/permalink/8813335503105716/"
+}
+},
+"context_layout": {
+"story": {
+"comet_sections": {
+"actor_photo": {
+"story": {
+"comet_sections": {
+"action_link": {
+"group": {
+"id": "6244813330590838",
+"__typename": "Group"
+}
+}
+}
+}
+},
+"metadata": [
+{
+"story": {
+"creation_time": 1790835833
+}
+}
+],
+"title": {
+"story": {
+"post_id": "8813335503105716",
+"actors": [
+{
+"name": "Rumen Filipov"
+}
+],
+"comet_sections": {
+"action_link": {
+"group": {
+"id": "6244813330590838",
+"__typename": "Group"
+}
+}
+},
+"to": {
+"__typename": "Group",
+"id": "6244813330590838",
+"url": "https://www.facebook.com/groups/6244813330590838/",
+"name": "Hristo Filipov"
+}
+}
+}
+}
+}
+},
+"feedback": {
+"story": {
+"story_ufi_container": {
+"story": {
+"feedback_context": {
+"interesting_top_level_comments": [
+{
+"comment": {
+"body": {
+"text": "sit dolore sed aliqua do enim do amet dolor et elit aliqua do enim do enim do amet dolore veniam exercitation laboris ut minim eiusmod enim nostrud incididunt ad nostrud incididunt ad eiusmod enim do enim nostrud ullamco ut adipiscing magna quis tempor ad eiusmod consectetur dolor et veniam exercitation incididunt ad eiusmod enim do amet dolor et elit sit dolore sed amet dolor ipsum et elit sit ipsum lorem lorem labore minim eiusmod consectetur dolor ipsum et elit aliqua quis tempor ad eiusmod consectetur dolor ipsum et veniam tempor consectetur dolor ipsum et veniam exercitation laboris nisi labore minim exercitation laboris"
+},
+"author": {
+"name": "Mila Kolev"
+}
+}
+},
+{
+"comment": {
+"body": {
+"text": "aliqua do amet dolore sed amet dolore veniam tempor c"
+},
+"author": {
+"name": "Dara Iliev"
+}
+}
+}
+]
+}
+}
+}
+}
+}
+},
+"permalink_url": "https://www.facebook.com/groups/6244813330590838/posts/8813335503105716/"
+}
+}
+},
+{
+"data": {
+"node": {
+"group_feed": {
+"edges": [
+{
+"node": {
+"comet_sections": {
+"content": {
+"story": {
+"comet_sections": {
+"message_container": {
+"story": {
+"comet_sections": {}
+}
+}
+},
+"post_id": "6010079619470810",
+"actors": [
+{
+"name": "Rumen Filipov"
+}
+],
+"message": {
+"text": "incididunt adipiscing sit ipsum lorem lorem labore minim eiusmod consectetur magna quis tempor consectetur magna sed aliqua quis ullamco laboris ut"
+},
+"wwwURL": "https://www.facebook.com/groups/6244813330590838/permalink/6010079619470810/"
+}
+},
+"context_layout": {
+"story": {
+"comet_sections": {
+"actor_photo": {
+"story": {
+"comet_sections": {
+"action_link": {
+"group": {
+"id": "6244813330590838",
+"__typename": "Group"
+}
+}
+}
+}
+},
+"metadata": [
+{
+"story": {
+"creation_time": 1790442897
+}
+}
+],
+"title": {
+"story": {
+"post_id": "6010079619470810",
+"actors": [
+{
+"name": "Rumen Filipov"
+}
+],
+"comet_sections": {
+"action_link": {
+"group": {
+"id": "6244813330590838",
+"__typename": "Group"
+}
+}
+},
+"to": {
+"__typename": "Group",
+"id": "6244813330590838",
+"url": "https://www.facebook.com/groups/6244813330590838/",
+"name": "Hristo Filipov"
+}
+}
+}
+}
+}
+},
+"feedback": {
+"story": {
+"story_ufi_container": {
+"story": {
+"feedback_context": {
+"interesting_top_level_comments": [
+{
+"comment": {
+"body": {
+"text": "ut adipiscing magna sed amet dolor et veniam tempor c"
+},
+"author": {
+"name": "Dara Iliev"
+}
+}
+}
+]
+}
+}
+}
+}
+}
+},
+"permalink_url": "https://www.facebook.com/groups/6244813330590838/posts/6010079619470810/"
+}
+}
+]
+}
+}
+}
+},
+{
+"data": {
+"node": {
+"group_feed": {
+"edges": [
+{
+"node": {
+"attached_story": {
+"comet_sections": {
+"context_layout": {
+"story": {
+"comet_sections": {
+"actor_photo": {
+"story": {
+"comet_sections": {}
+}
+},
+"metadata": [
+{
+"story": {
+"creation_time": 1790329265,
+"url": "https://www.facebook.com/samplefeed1/posts/pfbidczD5EhaF6isdTRqNdrJpNZN3jgQ4PyTy6g2QDYMDXhkaaaaaaaaaaaaaaaaaaaaaaaa"
+}
+}
+],
+"title": {
+"story": {
+"post_id": "6106733472147975",
+"actors": [
+{
+"name": "Iva Lazarov"
+}
+],
+"comet_sections": {}
+}
+}
+}
+}
+}
+}
+},
+"comet_sections": {
+"content": {
+"story": {
+"comet_sections": {
+"attached_story": {
+"story": {
+"attached_story": {
+"comet_sections": {
+"attached_story_layout": {
+"story": {
+"comet_sections": {
+"metadata": [
+{
+"story": {
+"creation_time": 1790329265
+}
+}
+],
+"title": {
+"story": {
+"post_id": "6106733472147975",
+"actors": [
+{
+"name": "Iva Lazarov"
+}
+],
+"comet_sections": {}
+}
+},
+"actor_photo": {
+"story": {
+"comet_sections": {}
+}
+},
+"message_container": {
+"story": {
+"comet_sections": {}
+}
+}
+},
+"attachments": [
+{
+"styles": {
+"attachment": {
+"url": "https://www.facebook.com/samplefeed1/posts/pfbidczD5EhaF6isdTRqNdrJpNZN3jgQ4PyTy6g2QDYMDXhkaaaaaaaaaaaaaaaaaaaaaaaa"
+}
+}
+}
+],
+"message": {
+"text": "dolore veniam tempor ad nostrud incididunt ad eiusmod enim do amet dolore veniam tempor consectetur magna sed aliqua do enim do amet dolore veniam exercitation laboris ut adipiscing magn\n\nnisi nisi nisi labore elit sit ipsum lorem lorem lorem labore minim eiusmod enim do enim do enim nostrud incididunt adipiscing magna quis tempor ad nostrud ullamco laboris nisi labore elit aliqua quis tempor ad nostrud ullamco laboris \n\nullamco ut minim exercitation laboris nisi nisi nisi nisi nisi nisi nisi nisi labore el\n\nenim nostrud ullamco ut minim exercitation laboris ut minim exercitation incididunt ad nostrud ullamco ut adipiscing sit ipsum \n\nsit ipsum et veniam tempor ad nostrud incididunt ad \n\nincididunt adipiscing magna quis tempor consectetur dolor ipsum lorem labore\n\naliqua quis ullamco labori\n\naliqua quis tempor ad eiusmod enim nostrud ullamco laboris nisi nisi labore elit sit ipsum lorem lorem labore minim exercitation incididunt ad nos\n\nut adipiscing sit dolore sed amet dolore sed aliqua quis ullamco laboris ut minim eiusmod consectetur magna quis ullamco laboris nisi labore elit aliqua quis tempor ad n\n\namet dolor et elit sit ipsum lorem lorem lorem lorem lorem labore elit sit dolore\n\namet dolor ipsum et ven"
+}
+}
+}
+}
+}
+}
+}
+},
+"post_id": "8960926233577649",
+"actors": [
+{
+"name": "Goran Dimov"
+}
+],
+"wwwURL": "https://www.facebook.com/groups/6244813330590838/permalink/8960926233577649/",
+"attached_story": {
+"actors": [
+{
+"name": "Iva Lazarov"
+}
+],
+"comet_sections": {
+"message_container": {
+"story": {
+"comet_sections": {}
+}
+}
+},
+"post_id": "6106733472147975",
+"message": {
+"text": "dolore veniam tempor ad nostrud incididunt ad eiusmod enim do amet dolore veniam tempor consectetur magna sed aliqua do enim do amet dolore veniam exercitation laboris ut adipiscing magn\n\nnisi nisi nisi labore elit sit ipsum lorem lorem lorem labore minim eiusmod enim do enim do enim nostrud incididunt adipiscing magna quis tempor ad nostrud ullamco laboris nisi labore elit aliqua quis tempor ad nostrud ullamco laboris \n\nullamco ut minim exercitation laboris nisi nisi nisi nisi nisi nisi nisi nisi labore el\n\nenim nostrud ullamco ut minim exercitation laboris ut minim exercitation incididunt ad nostrud ullamco ut adipiscing sit ipsum \n\nsit ipsum et veniam tempor ad nostrud incididunt ad \n\nincididunt adipiscing magna quis tempor consectetur dolor ipsum lorem labore\n\naliqua quis ullamco labori\n\naliqua quis tempor ad eiusmod enim nostrud ullamco laboris nisi nisi labore elit sit ipsum lorem lorem labore minim exercitation incididunt ad nos\n\nut adipiscing sit dolore sed amet dolore sed aliqua quis ullamco laboris ut minim eiusmod consectetur magna quis ullamco laboris nisi labore elit aliqua quis tempor ad n\n\namet dolor et elit sit ipsum lorem lorem lorem lorem lorem labore elit sit dolore\n\namet dolor ipsum et ven"
+},
+"wwwURL": "https://www.facebook.com/samplefeed1/posts/pfbidczD5EhaF6isdTRqNdrJpNZN3jgQ4PyTy6g2QDYMDXhkaaaaaaaaaaaaaaaaaaaaaaaa"
+}
+}
+},
+"context_layout": {
+"story": {
+"comet_sections": {
+"actor_photo": {
+"story": {
+"comet_sections": {
+"action_link": {
+"group": {
+"id": "6244813330590838",
+"__typename": "Group"
+}
+}
+}
+}
+},
+"metadata": [
+{
+"story": {
+"creation_time": 1790338678
+}
+}
+],
+"title": {
+"story": {
+"post_id": "8960926233577649",
+"actors": [
+{
+"name": "Goran Dimov"
+}
+],
+"comet_sections": {
+"action_link": {
+"group": {
+"id": "6244813330590838",
+"__typename": "Group"
+}
+}
+},
+"to": {
+"__typename": "Group",
+"id": "6244813330590838",
+"url": "https://www.facebook.com/groups/6244813330590838/",
+"name": "Hristo Filipov"
+}
+}
+}
+}
+}
+},
+"feedback": {
+"story": {
+"story_ufi_container": {
+"story": {
+"feedback_context": {
+"interesting_top_level_comments": [
+{
+"comment": {
+"body": {
+"text": "sit dolore sed amet dolo"
+},
+"author": {
+"name": "Hristo Georgiev"
+}
+}
+},
+{
+"comment": {
+"body": {
+"text": "nostrud ullamco ut minim exercitation laboris ut m"
+},
+"author": {
+"name": "Emil Iliev"
+}
+}
+}
+]
+}
+}
+}
+}
+}
+},
+"permalink_url": "https://www.facebook.com/groups/6244813330590838/posts/8960926233577649/"
+}
+}
+]
+}
+}
+}
+}
+]
+}
