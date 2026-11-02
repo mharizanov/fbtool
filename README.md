@@ -34,7 +34,7 @@ Facebook's rendered DOM is hostile to scraping: timestamps are
 character-shuffled spans, permalinks materialize lazily, and class names are
 generated. So fbtool doesn't parse the DOM at all. Instead:
 
-1. Playwright launches Chromium with a **persistent profile** (`profile/`),
+1. Playwright launches the installed Google Chrome (sandboxed) with a **persistent profile** (`profile/`),
    so your Facebook login survives between runs.
 2. It opens the group feed sorted chronologically and scrolls, exactly like
    a human reading the page.
@@ -105,8 +105,10 @@ Practical guidance:
 cd fbtool
 python3 -m venv venv
 venv/bin/pip install -r requirements.txt
-venv/bin/playwright install chromium
 ```
+
+fbtool drives the installed Google Chrome (`channel="chrome"`), which
+auto-updates; Playwright's bundled Chromium lags behind on security fixes.
 
 1. Copy the config and add your group slugs (the part after
    `facebook.com/groups/`). Public Pages work too: add the entry with
@@ -328,7 +330,7 @@ launchctl load ~/Library/LaunchAgents/com.fbtool.plist
 ```
 
 Scraping itself runs headless, so no display session is required. A
-Chromium window only opens automatically if the saved session has expired
+Chrome window only opens automatically if the saved session has expired
 and a human needs to log in — it closes itself the moment login is
 detected. Run `python -m fbtool login` proactively before scheduling
 unattended runs so that window never needs to appear on its own.

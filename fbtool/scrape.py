@@ -409,6 +409,10 @@ def open_context(pw, cfg: Config, headless: bool | None = None) -> BrowserContex
         headless=cfg.headless if headless is None else headless,
         viewport={"width": 1280, "height": 900},
         args=["--disable-blink-features=AutomationControlled"],
+        # Installed Chrome auto-updates; Playwright's bundled Chromium lags behind
+        # on security fixes. Playwright passes --no-sandbox unless told otherwise.
+        channel="chrome",
+        chromium_sandbox=True,
     )
 
 
